@@ -28,6 +28,7 @@ const NavBar = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("decodedToken");
     setSnackbarOpen(true);
   };
 
@@ -129,7 +130,7 @@ const NavBar = () => {
           elevation={6}
           variant="filled"
           onClose={handleCloseSnackbar}
-          severity="error"
+          severity="success"
         >
           Logout successful
         </MuiAlert>

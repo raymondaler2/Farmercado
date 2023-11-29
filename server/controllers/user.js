@@ -18,6 +18,38 @@ const generateToken = (user) => {
   );
 };
 
+const verifyToken = (token) => {
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    return decoded;
+  } catch (error) {
+    console.error("Token Verification Error:", error.message);
+    throw new Error("Invalid token");
+  }
+};
+
+const decode_token = asyncHandler(async (req, res) => {
+  const { token } = req.body;
+
+  try {
+    if (!token) {
+      return res.status(401).json({ error: "Token not provided" });
+    }
+
+    const decodedToken = verifyToken(token);
+    res.status(200).json(decodedToken);
+  } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      res.status(401).json({ error: "Invalid token" });
+    } else if (error.name === "TokenExpiredError") {
+      res.status(401).json({ error: "Token has expired" });
+    } else {
+      res.status(500).json({ error: "Internal Server Error" });
+      console.error("Token Verification Error:", error.message);
+    }
+  }
+});
+
 const user_login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
@@ -127,4 +159,5 @@ module.exports = {
   get_user_by_id,
   update_user,
   delete_user,
+  decode_token,
 };

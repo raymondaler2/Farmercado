@@ -24,7 +24,7 @@ mongoose.set("strictQuery", false);
 mongoose
   .connect(MONGO_URL)
   .then(() => {
-    console.log(`Connected to userDB`);
+    console.log(`Connected to DB`);
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

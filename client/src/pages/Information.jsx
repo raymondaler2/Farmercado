@@ -17,7 +17,6 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PasswordStrengthIndicator from "./../components/PasswordStrengthIndicator .jsx";
 import axios from "axios";
 import default_avatar from "./../assets/default_avatar.jpg";
-import jwt from "jwt-simple";
 
 const Information = () => {
   const [firstName, setFirstName] = useState("");
@@ -35,8 +34,6 @@ const Information = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isUpdateSuccess, setIsUpdateSuccess] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
-  const [decodedToken, setDecodedToken] = useState(null);
-  const jwtSecret = import.meta.env.VITE_JWT_SECRET;
 
   const handleImageChange = (file) => {
     setProfilePicture(file);
@@ -139,16 +136,6 @@ const Information = () => {
       ` ... .${extension}`;
     return truncatedFilename;
   };
-
-  useEffect(() => {
-    const token = localStorage.getItem("token");
-
-    if (token) {
-      const decoded = jwt.decode(token, jwtSecret);
-      console.log("%c Line:147 🍬 decoded", "color:#f5ce50", decoded);
-      setDecodedToken(decoded);
-    }
-  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">

@@ -8,10 +8,12 @@ const {
   update_user,
   delete_user,
   user_login,
+  decode_token,
 } = require("./../controllers/user");
 
 const router = express.Router();
 
+router.post("/decode_token", decode_token);
 router.post("/login", user_login);
 router.post("/", add_user);
 router.get("/", get_all_user);
