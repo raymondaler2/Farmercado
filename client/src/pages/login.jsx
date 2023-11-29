@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -16,7 +16,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false); // New state for "Remember Me" checkbox
+  const [rememberMe, setRememberMe] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
@@ -29,7 +29,7 @@ const Login = () => {
     setIsSnackbarOpen(false);
   };
 
-  const handleLogin = async (e) => {
+  const handleLogin = async () => {
     try {
       const response = await axios.post(
         "http://localhost:5000/api/user/login",
@@ -45,9 +45,17 @@ const Login = () => {
       if (rememberMe) {
         localStorage.setItem("rememberedUsername", username);
         localStorage.setItem("rememberedPassword", password);
+        localStorage.setItem(
+          "rememberedRememberMe",
+          JSON.stringify(rememberMe)
+        );
       } else {
         localStorage.removeItem("rememberedUsername");
         localStorage.removeItem("rememberedPassword");
+        localStorage.removeItem(
+          "rememberedRememberMe",
+          JSON.stringify(rememberMe)
+        );
       }
 
       setSnackbarSeverity("success");
@@ -63,6 +71,7 @@ const Login = () => {
   useEffect(() => {
     const rememberedUsername = localStorage.getItem("rememberedUsername");
     const rememberedPassword = localStorage.getItem("rememberedPassword");
+    const rememberedRememberMe = localStorage.getItem("rememberedRememberMe");
 
     if (rememberedUsername) {
       setUsername(rememberedUsername);
@@ -70,6 +79,10 @@ const Login = () => {
 
     if (rememberedPassword) {
       setPassword(rememberedPassword);
+    }
+
+    if (rememberedRememberMe) {
+      setRememberMe(JSON.parse(rememberedRememberMe));
     }
   }, []);
 
