@@ -30,7 +30,27 @@ const Home = () => {
     if (token) {
       decodeToken(decryptedtoken)
         .then((decodedToken) => {
-          localStorage.setItem("decodedToken", JSON.stringify(decodedToken));
+          const encryptedId = CryptoJS.AES.encrypt(
+            decodedToken.id,
+            jwtSecret
+          ).toString();
+          const encryptedEmail = CryptoJS.AES.encrypt(
+            decodedToken.email,
+            jwtSecret
+          ).toString();
+          const encryptedUserType = CryptoJS.AES.encrypt(
+            decodedToken.user_type,
+            jwtSecret
+          ).toString();
+          const encryptedUsername = CryptoJS.AES.encrypt(
+            decodedToken.username,
+            jwtSecret
+          ).toString();
+
+          localStorage.setItem("decodedTokenId", encryptedId);
+          localStorage.setItem("decodedTokenEmail", encryptedEmail);
+          localStorage.setItem("decodedTokenUserType", encryptedUserType);
+          localStorage.setItem("decodedTokenUsername", encryptedUsername);
         })
         .catch((error) => {
           console.error("Decode Token Error:", error.message);

@@ -9,15 +9,12 @@ const PasswordStrengthIndicator = ({ password }) => {
     const hasNumber = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const hasMinLength = password.length >= 5;
+    const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{5,}$/.test(
+      password
+    );
 
     // Update the conditions for a strong password
-    if (
-      hasUpperCase &&
-      hasLowerCase &&
-      hasNumber &&
-      hasSpecialChar &&
-      hasMinLength
-    ) {
+    if (isStrongPassword) {
       return "Strong";
     } else if (
       (hasUpperCase && hasLowerCase && hasNumber) ||

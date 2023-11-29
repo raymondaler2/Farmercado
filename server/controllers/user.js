@@ -123,14 +123,21 @@ const get_user_by_id = asyncHandler(async (req, res) => {
 const update_user = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const user = await User.findByIdAndUpdate(id, req.body);
+    const { profile_picture, ...userData } = req.body;
+
+    if (profile_picture) {
+      userData.profile_picture = profile_picture;
+    }
+
+    const user = await User.findByIdAndUpdate(id, userData, { new: true });
+
     if (!user) {
-      res
+      return res
         .status(404)
         .json({ error: `Update User ERROR: User with ID ${id} not found` });
     }
-    const updatedUser = await User.findById(id);
-    res.status(200).json(updatedUser);
+
+    res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Update User ERROR" });
     console.error("Update User ERROR:", error.message);

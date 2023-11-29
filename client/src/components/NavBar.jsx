@@ -28,7 +28,10 @@ const NavBar = () => {
 
   const handleSignOut = () => {
     localStorage.removeItem("token");
-    localStorage.removeItem("decodedToken");
+    localStorage.removeItem("decodedTokenId");
+    localStorage.removeItem("decodedTokenEmail");
+    localStorage.removeItem("decodedTokenUserType");
+    localStorage.removeItem("decodedTokenUsername");
     setSnackbarOpen(true);
   };
 

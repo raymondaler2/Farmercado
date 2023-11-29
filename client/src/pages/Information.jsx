@@ -17,23 +17,26 @@ import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PasswordStrengthIndicator from "./../components/PasswordStrengthIndicator .jsx";
 import axios from "axios";
 import default_avatar from "./../assets/default_avatar.jpg";
+import CryptoJS from "crypto-js";
 
 const Information = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [confirmEmail, setConfirmEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [showconfirmPassword, setShowconfirmPassword] = useState(false);
   const [role, setRole] = useState("buyer");
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [isUpdateSuccess, setIsUpdateSuccess] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+  const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+  const user_id = localStorage.getItem("decodedTokenId") ?? "";
+  const decryptedUserId = CryptoJS.AES.decrypt(user_id, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
 
   const handleImageChange = (file) => {
     setProfilePicture(file);
@@ -49,15 +52,7 @@ const Information = () => {
   };
 
   const checkFormValidity = () => {
-    const fields = [
-      firstName,
-      lastName,
-      username,
-      email,
-      confirmEmail,
-      password,
-      confirmPassword,
-    ];
+    const fields = [firstName, lastName, email, password];
 
     const isAllFieldsFilled = fields.every((field) => field.trim() !== "");
 
@@ -81,25 +76,21 @@ const Information = () => {
       return;
     }
 
-    if (email !== confirmEmail) {
-      openSnackbar("Email addresses do not match");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      openSnackbar("Passwords do not match");
-      return;
-    }
-
     try {
-      const response = await axios.put("http://localhost:5000/api/user", {
-        first_name: firstName,
-        last_name: lastName,
-        username,
-        email,
-        password,
-        user_type: role,
-      });
+      const response = await axios.put(
+        `http://localhost:5000/api/user/${decryptedUserId}`,
+        {
+          first_name: firstName,
+          last_name: lastName,
+          username,
+          email,
+          password,
+          user_type: role,
+          profile_picture: profilePicture
+            ? await convertFileToBase64(profilePicture)
+            : null,
+        }
+      );
 
       if (response.status === 200) {
         setIsUpdateSuccess(true);
@@ -125,6 +116,15 @@ const Information = () => {
     }
   };
 
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const truncateFilename = (filename, maxLength) => {
     if (filename.length <= maxLength) {
       return filename;
@@ -136,6 +136,33 @@ const Information = () => {
       ` ... .${extension}`;
     return truncatedFilename;
   };
+
+  const FetchUserData = async () => {
+    try {
+      const user = await axios.get(
+        `http://localhost:5000/api/user/${decryptedUserId}`
+      );
+
+      setFirstName(user.data.first_name);
+      setLastName(user.data.last_name);
+      setUsername(user.data.username);
+      setEmail(user.data.email);
+      setRole(user.data.user_type);
+      setProfilePicture(user.data.profile_picture);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    FetchUserData();
+  }, []);
+
+  useEffect(() => {
+    if (isUpdateSuccess) {
+      window.location.reload();
+    }
+  }, [isUpdateSuccess]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
@@ -151,7 +178,7 @@ const Information = () => {
           {profilePicture ? (
             <div className="flex justify-center items-center">
               <img
-                src={URL.createObjectURL(profilePicture)}
+                src={`data:image/png;base64,${profilePicture}`}
                 alt="Profile"
                 style={{ width: "70%", borderRadius: "50%", marginTop: "10px" }}
               />
@@ -191,25 +218,15 @@ const Information = () => {
               fullWidth
               margin="normal"
               value={username}
-              onChange={(e) => handleInputChange(setUsername, e.target.value)}
+              disabled={true}
               variant="outlined"
             />
             <TextField
-              label="Email Address"
+              label="Update Email Address"
               fullWidth
               margin="normal"
               value={email}
               onChange={(e) => handleInputChange(setEmail, e.target.value)}
-              variant="outlined"
-            />
-            <TextField
-              label="Confirm Email Address"
-              fullWidth
-              margin="normal"
-              value={confirmEmail}
-              onChange={(e) =>
-                handleInputChange(setConfirmEmail, e.target.value)
-              }
               variant="outlined"
             />
             <TextField
@@ -228,35 +245,6 @@ const Information = () => {
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
-                        <VisibilityIcon />
-                      ) : (
-                        <VisibilityOffIcon />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <TextField
-              label="Confirm Password"
-              type={showconfirmPassword ? "text" : "password"}
-              fullWidth
-              margin="normal"
-              variant="outlined"
-              value={confirmPassword}
-              onChange={(e) =>
-                handleInputChange(setConfirmPassword, e.target.value)
-              }
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() =>
-                        setShowconfirmPassword(!showconfirmPassword)
-                      }
-                    >
-                      {showconfirmPassword ? (
                         <VisibilityIcon />
                       ) : (
                         <VisibilityOffIcon />
@@ -291,7 +279,10 @@ const Information = () => {
               <div className="upload-info">
                 {profilePicture ? (
                   <p className="text-[#69717a]">
-                    {truncateFilename(profilePicture.name, 25)}
+                    {truncateFilename(
+                      profilePicture.name ?? "No file selected.",
+                      25
+                    )}
                   </p>
                 ) : (
                   <p className="text-[#69717a]">No file selected.</p>
@@ -305,7 +296,10 @@ const Information = () => {
                 id="role"
                 value={role}
                 label="Role"
-                onChange={(e) => setRole(e.target.value)}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  checkFormValidity();
+                }}
                 className="mb-[16px]"
               >
                 <MenuItem value="buyer">Buyer</MenuItem>
