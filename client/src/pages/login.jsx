@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
@@ -8,13 +8,70 @@ import IconButton from "@mui/material/IconButton";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import NavBar from "./../components/NavBar.jsx";
+import Snackbar from "@mui/material/Snackbar";
+import Alert from "@mui/material/Alert";
+import axios from "axios";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [rememberMe, setRememberMe] = useState(false); // New state for "Remember Me" checkbox
+  const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
+  const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
+
+  const handleSnackbarClose = () => {
+    setIsSnackbarOpen(false);
+  };
+
+  const handleLogin = async (e) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/user/login",
+        {
+          username,
+          password,
+        }
+      );
+
+      const token = response.data.token;
+      localStorage.setItem("token", token);
+
+      if (rememberMe) {
+        localStorage.setItem("rememberedUsername", username);
+        localStorage.setItem("rememberedPassword", password);
+      } else {
+        localStorage.removeItem("rememberedUsername");
+        localStorage.removeItem("rememberedPassword");
+      }
+
+      setSnackbarSeverity("success");
+      setSnackbarMessage("Login successful");
+      setIsSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarSeverity("error");
+      setSnackbarMessage("Login failed. Invalid username or password");
+      setIsSnackbarOpen(true);
+    }
+  };
+
+  useEffect(() => {
+    const rememberedUsername = localStorage.getItem("rememberedUsername");
+    const rememberedPassword = localStorage.getItem("rememberedPassword");
+
+    if (rememberedUsername) {
+      setUsername(rememberedUsername);
+    }
+
+    if (rememberedPassword) {
+      setPassword(rememberedPassword);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-white">
@@ -27,13 +84,15 @@ const Login = () => {
           <h2 className="text-xl font-bold mb-4 text-center text-[#444444;]">
             Sign in to Your Account
           </h2>
-          <form>
+          <form onSubmit={handleLogin}>
             <div className="mb-4">
               <TextField
                 fullWidth
                 id="username"
                 label="Username"
                 variant="outlined"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div className="mb-4">
@@ -43,6 +102,8 @@ const Login = () => {
                 label="Password"
                 type={showPassword ? "text" : "password"}
                 variant="outlined"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
                 InputProps={{
                   endAdornment: (
                     <IconButton
@@ -61,7 +122,13 @@ const Login = () => {
             </div>
             <div className="mb-4">
               <FormControlLabel
-                control={<Checkbox color="primary" />}
+                control={
+                  <Checkbox
+                    color="primary"
+                    checked={rememberMe}
+                    onChange={() => setRememberMe(!rememberMe)}
+                  />
+                }
                 label="Remember Me"
                 style={{ color: "#444", fontWeight: "bold" }}
               />
@@ -71,7 +138,7 @@ const Login = () => {
               <Button
                 variant="contained"
                 color="primary"
-                type="submit"
+                onClick={handleLogin}
                 fullWidth
                 style={{
                   backgroundColor: "#8BC34A",
@@ -86,7 +153,7 @@ const Login = () => {
             </div>
           </form>
         </div>
-        <div className="text-center mt-16 text-[#69717a]">
+        <div className="text-center mt-8 text-[#69717a]">
           <p>
             <Link to="/register" className="hover:underline">
               Register
@@ -98,6 +165,25 @@ const Login = () => {
           </p>
         </div>
       </div>
+
+      <Snackbar
+        open={isSnackbarOpen}
+        autoHideDuration={2000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          marginTop: "5rem",
+        }}
+      >
+        <Alert
+          elevation={6}
+          variant="filled"
+          onClose={handleSnackbarClose}
+          severity={snackbarSeverity}
+        >
+          {snackbarMessage}
+        </Alert>
+      </Snackbar>
     </div>
   );
 };

@@ -16,6 +16,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PasswordStrengthIndicator from "./../components/PasswordStrengthIndicator .jsx";
 import axios from "axios";
+import { Link } from "react-router-dom";
 
 const Register = () => {
   const [firstName, setFirstName] = useState("");
@@ -247,9 +248,9 @@ const Register = () => {
               color="primary"
               fullWidth
               onClick={handleRegister}
-              disabled={!isFormValid}
+              disabled={isFormValid}
               style={
-                !isFormValid
+                isFormValid
                   ? {
                       color: "white",
                       opacity: "0.5",
@@ -274,8 +275,12 @@ const Register = () => {
           </form>
           <Snackbar
             open={isSnackbarOpen}
-            autoHideDuration={6000}
+            autoHideDuration={2000}
             onClose={closeSnackbar}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            sx={{
+              marginTop: "5rem",
+            }}
           >
             <Alert
               elevation={6}
@@ -286,6 +291,13 @@ const Register = () => {
               {snackbarMessage}
             </Alert>
           </Snackbar>
+        </div>
+        <div className="text-center mt-8 text-[#69717a]">
+          <p>
+            <Link to="/login" className="hover:underline">
+              Have an account? Login
+            </Link>
+          </p>
         </div>
       </div>
     </div>
