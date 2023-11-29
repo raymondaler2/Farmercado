@@ -103,9 +103,19 @@ const Register = () => {
         openSnackbar("Registration failed", "error");
       }
     } catch (error) {
-      console.error("Error during registration:", error);
-      setIsRegistrationSuccess(false);
-      openSnackbar("Registration failed", "error");
+      if (error.response && error.response.status === 400) {
+        if (error.response.data.error === "Email Address already exists") {
+          openSnackbar("Email Address already exists", "error");
+        } else if (error.response.data.error === "Username already exists") {
+          openSnackbar("Username already exists", "error");
+        } else {
+          openSnackbar("Registration failed", "error");
+        }
+      } else {
+        console.error("Error during registration:", error);
+        setIsRegistrationSuccess(false);
+        openSnackbar("Registration failed", "error");
+      }
     }
   };
 

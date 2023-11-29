@@ -9,9 +9,9 @@ const add_user = asyncHandler(async (req, res) => {
   } catch (error) {
     if (error instanceof Error && error.code === 11000) {
       if (error.keyPattern.email) {
-        return res.status(400).json({ error: "Duplicate email address" });
+        return res.status(400).json({ error: "Email Address already exists" });
       } else if (error.keyPattern.username) {
-        return res.status(400).json({ error: "Duplicate username" });
+        return res.status(400).json({ error: "Username already exists" });
       }
     }
 
