@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import logo from "./../assets/logo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -7,6 +7,7 @@ import MuiAlert from "@mui/material/Alert";
 
 const NavBar = () => {
   const navigate = useNavigate();
+  const isTokenAvailable = !!localStorage.getItem("token");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSnackbarOpen, setSnackbarOpen] = useState(false);
 
@@ -39,8 +40,6 @@ const NavBar = () => {
     setSnackbarOpen(false);
   };
 
-  const isTokenAvailable = !!localStorage.getItem("token");
-
   return (
     <nav className=" text-white p-4 fixed w-full top-0 z-10">
       <div className="container mx-auto flex items-center justify-between">
@@ -61,10 +60,10 @@ const NavBar = () => {
               <NavLink to="/orders">Orders</NavLink>
 
               <div className="relative group" onMouseEnter={handleMouseEnter}>
-                <NavLink to="/profile">
+                <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
                   Profile
                   <ExpandMoreIcon />{" "}
-                </NavLink>
+                </p>
 
                 <div
                   className={`${
@@ -82,7 +81,7 @@ const NavBar = () => {
                     className="block px-4 py-2 hover:text-green-500 cursor-pointer"
                     onClick={handleSignOut}
                   >
-                    Sign out
+                    Log out
                   </p>
                 </div>
               </div>
@@ -94,10 +93,10 @@ const NavBar = () => {
               </NavLink>
 
               <div className="relative group" onMouseEnter={handleMouseEnter}>
-                <NavLink to="/profile">
+                <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
                   Profile
                   <ExpandMoreIcon />{" "}
-                </NavLink>
+                </p>
 
                 <div
                   className={`${
@@ -105,12 +104,6 @@ const NavBar = () => {
                   } absolute right-0 mt-2 space-y-2 bg-white text-[19px] font-bold text-[#7A7A7A] transition-transform duration-300 ease-in-out transform translate-y-2 shadow-md`}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <Link
-                    to="/information"
-                    className="block px-4 py-2 hover:text-green-500"
-                  >
-                    Information
-                  </Link>
                   <Link
                     to="/login"
                     className="block px-4 py-2 hover:text-green-500"
@@ -136,7 +129,7 @@ const NavBar = () => {
           elevation={6}
           variant="filled"
           onClose={handleCloseSnackbar}
-          severity="success"
+          severity="error"
         >
           Logout successful
         </MuiAlert>

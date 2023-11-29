@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const user = mongoose.Schema({
+const userSchema = mongoose.Schema({
   first_name: {
     type: String,
     required: [true, "Please enter First Name"],
@@ -28,13 +28,16 @@ const user = mongoose.Schema({
     type: String,
     required: [true, "Please enter User Type"],
   },
+  profile_picture: {
+    type: String,
+  },
 });
 
-user.methods.matchPassword = async function (enteredPassword) {
+userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-user.pre("save", async function (next) {
+userSchema.pre("save", async function (next) {
   if (!this.isModified("password")) {
     return next();
   }
@@ -48,5 +51,5 @@ user.pre("save", async function (next) {
   }
 });
 
-const User = mongoose.model("User", user);
+const User = mongoose.model("User", userSchema);
 module.exports = User;

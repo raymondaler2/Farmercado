@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import NavBar from "./../components/NavBar.jsx";
 import {
   TextField,
@@ -16,9 +16,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PasswordStrengthIndicator from "./../components/PasswordStrengthIndicator .jsx";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import default_avatar from "./../assets/default_avatar.jpg";
+import jwt from "jwt-simple";
 
-const Register = () => {
+const Information = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -32,7 +33,14 @@ const Register = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [isRegistrationSuccess, setIsRegistrationSuccess] = useState(false);
+  const [isUpdateSuccess, setIsUpdateSuccess] = useState(false);
+  const [profilePicture, setProfilePicture] = useState(null);
+  const [decodedToken, setDecodedToken] = useState(null);
+  const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+
+  const handleImageChange = (file) => {
+    setProfilePicture(file);
+  };
 
   const openSnackbar = (message) => {
     setSnackbarMessage(message);
@@ -68,7 +76,7 @@ const Register = () => {
     checkFormValidity();
   };
 
-  const handleRegister = async () => {
+  const handleUpdate = async () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
@@ -87,7 +95,7 @@ const Register = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:5000/api/user", {
+      const response = await axios.put("http://localhost:5000/api/user", {
         first_name: firstName,
         last_name: lastName,
         username,
@@ -97,11 +105,11 @@ const Register = () => {
       });
 
       if (response.status === 200) {
-        setIsRegistrationSuccess(true);
-        openSnackbar("Registration successful", "success");
+        setIsUpdateSuccess(true);
+        openSnackbar("Update successful", "success");
       } else {
-        setIsRegistrationSuccess(false);
-        openSnackbar("Registration failed", "error");
+        setIsUpdateSuccess(false);
+        openSnackbar("Update failed", "error");
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
@@ -110,27 +118,70 @@ const Register = () => {
         } else if (error.response.data.error === "Username already exists") {
           openSnackbar("Username already exists", "error");
         } else {
-          openSnackbar("Registration failed", "error");
+          openSnackbar("Update failed", "error");
         }
       } else {
-        console.error("Error during registration:", error);
-        setIsRegistrationSuccess(false);
-        openSnackbar("Registration failed", "error");
+        console.error("Error during update:", error);
+        setIsUpdateSuccess(false);
+        openSnackbar("Update failed", "error");
       }
     }
   };
+
+  const truncateFilename = (filename, maxLength) => {
+    if (filename.length <= maxLength) {
+      return filename;
+    }
+
+    const extension = filename.split(".").pop();
+    const truncatedFilename =
+      filename.substring(0, maxLength - extension.length - 4) +
+      ` ... .${extension}`;
+    return truncatedFilename;
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+
+    if (token) {
+      const decoded = jwt.decode(token, jwtSecret);
+      console.log("%c Line:147 🍬 decoded", "color:#f5ce50", decoded);
+      setDecodedToken(decoded);
+    }
+  }, []);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <NavBar />
       <div className="bg-white pt-[10rem] mb-20">
         <h1 className="text-2xl text-center text-[#8BC34A] text-[5rem] mb-11 font-serif">
-          Register
+          Information
         </h1>
         <div className="bg-white p-8 rounded w-96 shadow-2xl mt-4">
           <h2 className="text-xl font-bold mb-4 text-center text-[#444444;]">
-            Create an Account
+            Edit Your Profile
           </h2>
+          {profilePicture ? (
+            <div className="flex justify-center items-center">
+              <img
+                src={URL.createObjectURL(profilePicture)}
+                alt="Profile"
+                style={{ width: "70%", borderRadius: "50%", marginTop: "10px" }}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center items-center">
+              <img
+                src={default_avatar}
+                alt="Profile"
+                style={{
+                  width: "70%",
+                  borderRadius: "50%",
+                  marginTop: "10px",
+                }}
+              />
+            </div>
+          )}
           <form>
             <TextField
               label="First Name"
@@ -229,6 +280,37 @@ const Register = () => {
               }}
             />
             <PasswordStrengthIndicator password={password} />
+            <div className="upload-container mb-5">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => handleImageChange(e.target.files[0])}
+                style={{ display: "none" }}
+                id="profile-picture-upload"
+              />
+              <label htmlFor="profile-picture-upload" className="upload-button">
+                <Button
+                  variant="contained"
+                  component="span"
+                  style={{
+                    color: "white",
+                    backgroundColor: "#039be5",
+                    textTransform: "none",
+                  }}
+                >
+                  Browse
+                </Button>
+              </label>
+              <div className="upload-info">
+                {profilePicture ? (
+                  <p className="text-[#69717a]">
+                    {truncateFilename(profilePicture.name, 25)}
+                  </p>
+                ) : (
+                  <p className="text-[#69717a]">No file selected.</p>
+                )}
+              </div>
+            </div>
             <FormControl fullWidth variant="outlined">
               <InputLabel id="role-label">Role</InputLabel>
               <Select
@@ -247,7 +329,7 @@ const Register = () => {
               variant="contained"
               color="primary"
               fullWidth
-              onClick={handleRegister}
+              onClick={handleUpdate}
               disabled={!isFormValid}
               style={
                 !isFormValid
@@ -270,7 +352,7 @@ const Register = () => {
                     }
               }
             >
-              Register
+              Update Profile
             </Button>
           </form>
           <Snackbar
@@ -286,22 +368,15 @@ const Register = () => {
               elevation={6}
               variant="filled"
               onClose={closeSnackbar}
-              severity={isRegistrationSuccess ? "success" : "error"}
+              severity={isUpdateSuccess ? "success" : "error"}
             >
               {snackbarMessage}
             </Alert>
           </Snackbar>
-        </div>
-        <div className="text-center mt-8 text-[#69717a]">
-          <p>
-            <Link to="/login" className="hover:underline">
-              Have an account? Login
-            </Link>
-          </p>
         </div>
       </div>
     </div>
   );
 };
 
-export default Register;
+export default Information;
