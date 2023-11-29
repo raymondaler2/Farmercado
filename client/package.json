@@ -18,6 +18,7 @@
     "@mui/material": "^5.14.17",
     "@supercharge/strings": "^2.0.0",
     "axios": "^1.6.2",
+    "crypto-js": "^4.2.0",
     "dotenv": "^16.3.1",
     "jsonwebtoken": "^9.0.2",
     "jwt-decode": "^4.0.0",

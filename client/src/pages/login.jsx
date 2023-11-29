@@ -11,6 +11,7 @@ import NavBar from "./../components/NavBar.jsx";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
 import axios from "axios";
+import CryptoJS from "crypto-js";
 
 const Login = () => {
   const navigate = useNavigate();
@@ -21,6 +22,7 @@ const Login = () => {
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
+  const jwtSecret = import.meta.env.VITE_JWT_SECRET;
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -49,11 +51,21 @@ const Login = () => {
       );
 
       const token = response.data.token;
-      localStorage.setItem("token", token);
+      const encryptedToken = CryptoJS.AES.encrypt(token, jwtSecret).toString();
+      localStorage.setItem("token", encryptedToken);
 
       if (rememberMe) {
-        localStorage.setItem("rememberedUsername", username);
-        localStorage.setItem("rememberedPassword", password);
+        const encryptedUsername = CryptoJS.AES.encrypt(
+          username,
+          jwtSecret
+        ).toString();
+        const encryptedPassword = CryptoJS.AES.encrypt(
+          password,
+          jwtSecret
+        ).toString();
+
+        localStorage.setItem("rememberedUsername", encryptedUsername);
+        localStorage.setItem("rememberedPassword", encryptedPassword);
         localStorage.setItem(
           "rememberedRememberMe",
           JSON.stringify(rememberMe)
@@ -83,11 +95,21 @@ const Login = () => {
     const rememberedRememberMe = localStorage.getItem("rememberedRememberMe");
 
     if (rememberedUsername) {
-      setUsername(rememberedUsername);
+      // Decrypt the username using JWT_SECRET
+      const decryptedUsername = CryptoJS.AES.decrypt(
+        rememberedUsername,
+        jwtSecret
+      ).toString(CryptoJS.enc.Utf8);
+      setUsername(decryptedUsername);
     }
 
     if (rememberedPassword) {
-      setPassword(rememberedPassword);
+      // Decrypt the password using JWT_SECRET
+      const decryptedPassword = CryptoJS.AES.decrypt(
+        rememberedPassword,
+        jwtSecret
+      ).toString(CryptoJS.enc.Utf8);
+      setPassword(decryptedPassword);
     }
 
     if (rememberedRememberMe) {
