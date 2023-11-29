@@ -190,7 +190,7 @@ const Login = () => {
 
       <Snackbar
         open={isSnackbarOpen}
-        autoHideDuration={2000}
+        autoHideDuration={1000}
         onClose={handleSnackbarClose}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{
