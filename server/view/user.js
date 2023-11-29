@@ -7,10 +7,12 @@ const {
   get_user_by_id,
   update_user,
   delete_user,
+  user_login,
 } = require("./../controllers/user");
 
 const router = express.Router();
 
+router.post("/login", user_login);
 router.post("/", add_user);
 router.get("/", get_all_user);
 router.get("/:id", get_user_by_id);

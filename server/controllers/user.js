@@ -1,6 +1,53 @@
 const User = require("../models/user");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+
+const generateToken = (user) => {
+  return jwt.sign(
+    {
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      user_type: user.user_type,
+    },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: "168h",
+    }
+  );
+};
+
+const user_login = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+
+  try {
+    const user = await User.findOne({ username });
+
+    if (!user) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: "Invalid username or password" });
+    }
+
+    const token = generateToken(user);
+
+    res.status(200).json({
+      id: user._id,
+      username: user.username,
+      email: user.email,
+      user_type: user.user_type,
+      token,
+    });
+  } catch (error) {
+    console.error("Login Error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
 
 const add_user = asyncHandler(async (req, res) => {
   try {
@@ -74,6 +121,7 @@ const delete_user = asyncHandler(async (req, res) => {
 });
 
 module.exports = {
+  user_login,
   add_user,
   get_all_user,
   get_user_by_id,

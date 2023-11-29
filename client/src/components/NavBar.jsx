@@ -60,7 +60,7 @@ const NavBar = () => {
                 to="/signout"
                 className="block px-4 py-2 hover:text-green-500"
               >
-                Signout
+                Sign out
               </Link>
             </div>
           </div>
