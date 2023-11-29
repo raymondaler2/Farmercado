@@ -23,7 +23,7 @@ const Login = () => {
         <h1 className="text-2xl text-center text-[#8BC34A] text-[5rem] mb-11 font-serif">
           Login
         </h1>
-        <div className="bg-white p-8 rounded w-96 shadow-lg mt-4">
+        <div className="bg-white p-8 rounded w-96 shadow-2xl mt-4">
           <h2 className="text-xl font-bold mb-4 text-center text-[#444444;]">
             Sign in to Your Account
           </h2>
@@ -86,7 +86,7 @@ const Login = () => {
             </div>
           </form>
         </div>
-        <div className="text-center mt-8 text-[#69717a]">
+        <div className="text-center mt-16 text-[#69717a]">
           <p>
             <Link to="/register" className="hover:underline">
               Register
