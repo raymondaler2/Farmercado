@@ -19,12 +19,15 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 import DeleteIcon from "@mui/icons-material/Delete";
 import axios from "axios";
 import CryptoJS from "crypto-js";
 import InventoryIcon from "@mui/icons-material/Inventory";
 
 const Store = () => {
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [productDialogOpen, setProductDialogOpen] = useState(false);
   const [selectedStoreProducts, setSelectedStoreProducts] = useState([]);
   const [stores, setStores] = useState([]);
@@ -61,9 +64,25 @@ const Store = () => {
     setDeleteDialogOpen(true);
   };
 
-  const handleDeleteConfirm = () => {
-    // Add logic to delete the store
+  const handleSnackbarClose = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    window.location.reload();
+    setSnackbarOpen(false);
+  };
+
+  const handleDeleteConfirm = async () => {
     console.log("Deleting store:", storeToDelete);
+
+    await axios
+      .delete(
+        `http://localhost:5000/api/user/${decryptedUserId}/stores/${storeToDelete._id}`
+      )
+      .then(() => {
+        setSnackbarOpen(true); // Open Snackbar on successful delete
+      });
+
     setDeleteDialogOpen(false);
   };
 
@@ -112,10 +131,6 @@ const Store = () => {
                     <TableCell>{`${store.store_location.latitude}, ${store.store_location.longitude}`}</TableCell>
 
                     <TableCell>
-                      <IconButton onClick={() => handleDeleteClick(store)}>
-                        <DeleteIcon />
-                      </IconButton>
-
                       {store.products.length > 0 && (
                         <IconButton
                           onClick={() => handleProductButtonClick(store)}
@@ -124,6 +139,9 @@ const Store = () => {
                           <InventoryIcon />
                         </IconButton>
                       )}
+                      <IconButton onClick={() => handleDeleteClick(store)}>
+                        <DeleteIcon />
+                      </IconButton>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -171,6 +189,25 @@ const Store = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1000}
+        onClose={handleSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          marginTop: "5rem",
+        }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={handleSnackbarClose}
+          severity="success"
+        >
+          Store Deleted
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
 };
