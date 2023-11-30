@@ -13,11 +13,12 @@ const {
   update_store_of_user,
   get_user_stores,
   get_store,
+  delete_store,
 } = require("./../controllers/user");
 
 const router = express.Router();
+router.delete("/:userId/stores/:storeId", delete_store);
 router.get("/:userId/stores/:storeId", get_store);
-router.get("/:id/store", get_store);
 router.get("/:id/stores", get_user_stores);
 router.put("/update_store_of_user", update_store_of_user);
 router.post("/add_store_to_user", add_store_to_user);

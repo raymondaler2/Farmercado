@@ -294,7 +294,41 @@ const get_store = asyncHandler(async (req, res) => {
   }
 });
 
+const delete_store = asyncHandler(async (req, res) => {
+  try {
+    const { userId, storeId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with ID ${userId} not found` });
+    }
+
+    const storeIndex = user.stores.findIndex(
+      (store) => store._id.toString() === storeId
+    );
+
+    if (storeIndex === -1) {
+      return res.status(404).json({
+        error: `Store with ID ${storeId} not found in user's account`,
+      });
+    }
+
+    user.stores.splice(storeIndex, 1); // Remove the store from the array
+
+    await user.save();
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Delete Store ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = {
+  delete_store,
   get_store,
   get_user_stores,
   update_store_of_user,
