@@ -90,6 +90,10 @@ const Store = () => {
     setDeleteDialogOpen(false);
   };
 
+  const handleSwitch = (store) => {
+    console.log("%c Line:94 🍑 store", "color:#7f2b82", store);
+  };
+
   return (
     <div className="flex flex-col items-center justify-center h-screen">
       <NavBar />
@@ -124,7 +128,10 @@ const Store = () => {
                   <TableRow key={store._id}>
                     <TableCell>
                       <FormControl>
-                        <Switch checked={store.store_status === "Open"} />
+                        <Switch
+                          onClick={() => handleSwitch(store)}
+                          checked={store.store_status === "Open"}
+                        />
                       </FormControl>
                     </TableCell>
                     <TableCell>{store.store_name}</TableCell>

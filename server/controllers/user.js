@@ -195,7 +195,21 @@ const add_store_to_user = asyncHandler(async (req, res) => {
 
 const update_store_of_user = asyncHandler(async (req, res) => {
   try {
-    const { userId, storeId, storeInfo, productsInfo } = req.body;
+    const {
+      userId,
+      storeId,
+      store_name,
+      store_description,
+      store_contact_number,
+      store_status,
+      store_location,
+      products,
+    } = req.body;
+
+    // Check if required data is present
+    if (!userId || !storeId) {
+      return res.status(400).json({ error: "Invalid request data" });
+    }
 
     const user = await User.findById(userId);
 
@@ -210,36 +224,42 @@ const update_store_of_user = asyncHandler(async (req, res) => {
     );
 
     if (storeIndex === -1) {
-      return res.status(404).json({
-        error: `Store with ID ${storeId} not found in user's account`,
-      });
+      return res
+        .status(404)
+        .json({
+          error: `Store with ID ${storeId} not found in user's account`,
+        });
     }
 
     const store = user.stores[storeIndex];
 
-    store.store_name = storeInfo.store_name || store.store_name;
-    store.store_image = storeInfo.store_image || store.store_image;
-    store.store_description =
-      storeInfo.store_description || store.store_description;
-    store.store_contact_number =
-      storeInfo.store_contact_number || store.store_contact_number;
-    store.store_status = storeInfo.store_status || store.store_status;
-    store.store_location = storeInfo.store_location || store.store_location;
+    // Update store properties if provided in the request
+    if (store_name) store.store_name = store_name;
+    if (store_description) store.store_description = store_description;
+    if (store_contact_number) store.store_contact_number = store_contact_number;
+    if (store_status) store.store_status = store_status;
+    if (store_location) store.store_location = store_location;
 
-    productsInfo.forEach((productInfo) => {
-      const existingProductIndex = store.products.findIndex(
-        (existingProduct) => existingProduct._id.toString() === productInfo._id
-      );
+    // Update products if provided in the request
+    if (products && Array.isArray(products)) {
+      products.forEach((productInfo) => {
+        const existingProductIndex = store.products.findIndex(
+          (existingProduct) =>
+            existingProduct._id.toString() === productInfo._id
+        );
 
-      if (existingProductIndex !== -1) {
-        store.products[existingProductIndex] = {
-          ...store.products[existingProductIndex],
-          ...productInfo,
-        };
-      } else {
-        store.products.push(new Product(productInfo));
-      }
-    });
+        if (existingProductIndex !== -1) {
+          // Update existing product
+          store.products[existingProductIndex] = {
+            ...store.products[existingProductIndex],
+            ...productInfo,
+          };
+        } else {
+          // Add new product
+          store.products.push(new Product(productInfo));
+        }
+      });
+    }
 
     await user.save();
 
