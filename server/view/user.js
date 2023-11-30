@@ -17,7 +17,7 @@ const {
 
 const router = express.Router();
 router.get("/:userId/stores/:storeId", get_store);
-router.get("/:id/stores", get_store);
+router.get("/:id/store", get_store);
 router.get("/:id/stores", get_user_stores);
 router.put("/update_store_of_user", update_store_of_user);
 router.post("/add_store_to_user", add_store_to_user);
