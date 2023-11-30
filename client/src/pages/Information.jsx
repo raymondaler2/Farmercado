@@ -165,7 +165,7 @@ const Information = () => {
       setRole(user.data.user_type);
       setProfilePicture(user.data.profile_picture);
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   };
 

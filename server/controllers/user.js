@@ -253,7 +253,6 @@ const update_store_of_user = asyncHandler(async (req, res) => {
 const get_user_stores = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    console.log("%c Line:256 🥕 id", "color:#93c0a4", id);
 
     const user = await User.findById(id);
 
