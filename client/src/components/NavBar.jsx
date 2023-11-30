@@ -4,12 +4,18 @@ import logo from "./../assets/logo.png";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import CryptoJS from "crypto-js";
 
 const NavBar = () => {
   const navigate = useNavigate();
   const isTokenAvailable = !!localStorage.getItem("token");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSnackbarOpen, setSnackbarOpen] = useState(false);
+  const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+  const user_type = localStorage.getItem("decodedTokenUserType") ?? "";
+  const decryptedUserType = CryptoJS.AES.decrypt(user_type, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
 
   const handleMouseEnter = () => {
     setTimeout(() => {
@@ -55,41 +61,77 @@ const NavBar = () => {
 
         <div className="flex items-center space-x-8">
           {isTokenAvailable ? (
-            <>
-              <NavLink to="/" exact>
-                Home
-              </NavLink>
-              <NavLink to="/prices">Prices</NavLink>
-              <NavLink to="/store">Store</NavLink>
-              <NavLink to="/orders">Orders</NavLink>
+            decryptedUserType === "seller" ? (
+              <>
+                <NavLink to="/" exact>
+                  Home
+                </NavLink>
+                <NavLink to="/prices">Prices</NavLink>
+                <NavLink to="/store">Store</NavLink>
+                <NavLink to="/orders">Orders</NavLink>
 
-              <div className="relative group" onMouseEnter={handleMouseEnter}>
-                <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
-                  Profile
-                  <ExpandMoreIcon />{" "}
-                </p>
-
-                <div
-                  className={`${
-                    isDropdownOpen ? "block" : "hidden"
-                  } absolute right-0 mt-2 space-y-2 bg-white text-[19px] font-bold text-[#7A7A7A] transition-transform duration-300 ease-in-out transform translate-y-2 shadow-md`}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <Link
-                    to="/information"
-                    className="block px-4 py-2 hover:text-green-500"
-                  >
-                    Information
-                  </Link>
-                  <p
-                    className="block px-4 py-2 hover:text-green-500 cursor-pointer"
-                    onClick={handleSignOut}
-                  >
-                    Log out
+                <div className="relative group" onMouseEnter={handleMouseEnter}>
+                  <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
+                    Profile
+                    <ExpandMoreIcon />{" "}
                   </p>
+
+                  <div
+                    className={`${
+                      isDropdownOpen ? "block" : "hidden"
+                    } absolute right-0 mt-2 space-y-2 bg-white text-[19px] font-bold text-[#7A7A7A] transition-transform duration-300 ease-in-out transform translate-y-2 shadow-md`}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link
+                      to="/information"
+                      className="block px-4 py-2 hover:text-green-500"
+                    >
+                      Information
+                    </Link>
+                    <p
+                      className="block px-4 py-2 hover:text-green-500 cursor-pointer"
+                      onClick={handleSignOut}
+                    >
+                      Log out
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </>
+              </>
+            ) : (
+              <>
+                <NavLink to="/" exact>
+                  Home
+                </NavLink>
+                <NavLink to="/orders">Orders</NavLink>
+
+                <div className="relative group" onMouseEnter={handleMouseEnter}>
+                  <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
+                    Profile
+                    <ExpandMoreIcon />{" "}
+                  </p>
+
+                  <div
+                    className={`${
+                      isDropdownOpen ? "block" : "hidden"
+                    } absolute right-0 mt-2 space-y-2 bg-white text-[19px] font-bold text-[#7A7A7A] transition-transform duration-300 ease-in-out transform translate-y-2 shadow-md`}
+                    onMouseLeave={handleMouseLeave}
+                  >
+                    <Link
+                      to="/information"
+                      className="block px-4 py-2 hover:text-green-500"
+                    >
+                      Information
+                    </Link>
+                    <p
+                      className="block px-4 py-2 hover:text-green-500 cursor-pointer"
+                      onClick={handleSignOut}
+                    >
+                      Log out
+                    </p>
+                  </div>
+                </div>
+              </>
+            )
           ) : (
             <>
               <NavLink to="/" exact>

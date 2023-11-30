@@ -16,9 +16,10 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import PasswordStrengthIndicator from "./../components/PasswordStrengthIndicator .jsx";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 const Register = () => {
+  const navigate = useNavigate();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -32,14 +33,22 @@ const Register = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
-  const [isRegistrationSuccess, setIsRegistrationSuccess] = useState(false);
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
 
   const openSnackbar = (message) => {
     setSnackbarMessage(message);
     setIsSnackbarOpen(true);
   };
 
-  const closeSnackbar = () => {
+  const closeSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    if (snackbarSeverity === "success") {
+      navigate("/login");
+    }
+
     setIsSnackbarOpen(false);
   };
 
@@ -55,10 +64,17 @@ const Register = () => {
     ];
 
     const isAllFieldsFilled = fields.every((field) => field.trim() !== "");
-
-    const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{5,}$/.test(
-      password
-    );
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= 5;
+    const isStrongPassword =
+      hasMinLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar;
 
     setIsFormValid(isAllFieldsFilled && isStrongPassword);
   };
@@ -72,16 +88,19 @@ const Register = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
+      setSnackbarSeverity("error");
       openSnackbar("Invalid email address");
       return;
     }
 
     if (email !== confirmEmail) {
+      setSnackbarSeverity("error");
       openSnackbar("Email addresses do not match");
       return;
     }
 
     if (password !== confirmPassword) {
+      setSnackbarSeverity("error");
       openSnackbar("Passwords do not match");
       return;
     }
@@ -97,24 +116,27 @@ const Register = () => {
       });
 
       if (response.status === 200) {
-        setIsRegistrationSuccess(true);
+        setSnackbarSeverity("success");
         openSnackbar("Registration successful", "success");
       } else {
-        setIsRegistrationSuccess(false);
+        setSnackbarSeverity("error");
         openSnackbar("Registration failed", "error");
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
         if (error.response.data.error === "Email Address already exists") {
+          setSnackbarSeverity("error");
           openSnackbar("Email Address already exists", "error");
         } else if (error.response.data.error === "Username already exists") {
+          setSnackbarSeverity("error");
           openSnackbar("Username already exists", "error");
         } else {
+          setSnackbarSeverity("error");
           openSnackbar("Registration failed", "error");
         }
       } else {
         console.error("Error during registration:", error);
-        setIsRegistrationSuccess(false);
+        setSnackbarSeverity("error");
         openSnackbar("Registration failed", "error");
       }
     }
@@ -236,7 +258,10 @@ const Register = () => {
                 id="role"
                 value={role}
                 label="Role"
-                onChange={(e) => setRole(e.target.value)}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  checkFormValidity();
+                }}
                 className="mb-[16px]"
               >
                 <MenuItem value="buyer">Buyer</MenuItem>
@@ -286,7 +311,7 @@ const Register = () => {
               elevation={6}
               variant="filled"
               onClose={closeSnackbar}
-              severity={isRegistrationSuccess ? "success" : "error"}
+              severity={snackbarSeverity}
             >
               {snackbarMessage}
             </Alert>

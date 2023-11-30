@@ -123,10 +123,15 @@ const get_user_by_id = asyncHandler(async (req, res) => {
 const update_user = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
-    const { profile_picture, ...userData } = req.body;
+    const { profile_picture, password, ...userData } = req.body;
 
     if (profile_picture) {
       userData.profile_picture = profile_picture;
+    }
+
+    if (password) {
+      const hashedPassword = await bcrypt.hash(password, 10);
+      userData.password = hashedPassword;
     }
 
     const user = await User.findByIdAndUpdate(id, userData, { new: true });

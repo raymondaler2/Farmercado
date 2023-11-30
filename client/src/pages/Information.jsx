@@ -30,6 +30,7 @@ const Information = () => {
   const [isFormValid, setIsFormValid] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
+  const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isUpdateSuccess, setIsUpdateSuccess] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
@@ -55,10 +56,17 @@ const Information = () => {
     const fields = [firstName, lastName, email, password];
 
     const isAllFieldsFilled = fields.every((field) => field.trim() !== "");
-
-    const isStrongPassword = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{5,}$/.test(
-      password
-    );
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= 5;
+    const isStrongPassword =
+      hasMinLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar;
 
     setIsFormValid(isAllFieldsFilled && isStrongPassword);
   };
@@ -72,6 +80,7 @@ const Information = () => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
     if (!emailRegex.test(email)) {
+      setSnackbarSeverity("error");
       openSnackbar("Invalid email address");
       return;
     }
@@ -94,23 +103,29 @@ const Information = () => {
 
       if (response.status === 200) {
         setIsUpdateSuccess(true);
+        setSnackbarSeverity("success");
         openSnackbar("Update successful", "success");
       } else {
         setIsUpdateSuccess(false);
+        setSnackbarSeverity("error");
         openSnackbar("Update failed", "error");
       }
     } catch (error) {
       if (error.response && error.response.status === 400) {
         if (error.response.data.error === "Email Address already exists") {
+          setSnackbarSeverity("error");
           openSnackbar("Email Address already exists", "error");
         } else if (error.response.data.error === "Username already exists") {
+          setSnackbarSeverity("error");
           openSnackbar("Username already exists", "error");
         } else {
+          setSnackbarSeverity("error");
           openSnackbar("Update failed", "error");
         }
       } else {
         console.error("Error during update:", error);
         setIsUpdateSuccess(false);
+        setSnackbarSeverity("error");
         openSnackbar("Update failed", "error");
       }
     }
@@ -349,7 +364,7 @@ const Information = () => {
               elevation={6}
               variant="filled"
               onClose={closeSnackbar}
-              severity={isUpdateSuccess ? "success" : "error"}
+              severity={snackbarSeverity}
             >
               {snackbarMessage}
             </Alert>
