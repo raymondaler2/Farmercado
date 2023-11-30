@@ -190,15 +190,7 @@ const Information = () => {
           <h2 className="text-xl font-bold mb-4 text-center text-[#444444;]">
             Edit Your Profile
           </h2>
-          {profilePicture ? (
-            <div className="flex justify-center items-center">
-              <img
-                src={`data:image/png;base64,${profilePicture}`}
-                alt="Profile"
-                style={{ width: "70%", borderRadius: "50%", marginTop: "10px" }}
-              />
-            </div>
-          ) : (
+          {!profilePicture ? (
             <div className="flex justify-center items-center">
               <img
                 src={default_avatar}
@@ -208,6 +200,14 @@ const Information = () => {
                   borderRadius: "50%",
                   marginTop: "10px",
                 }}
+              />
+            </div>
+          ) : (
+            <div className="flex justify-center items-center">
+              <img
+                src={`data:image/png;base64,${profilePicture}`}
+                alt="Profile"
+                style={{ width: "70%", borderRadius: "50%", marginTop: "10px" }}
               />
             </div>
           )}

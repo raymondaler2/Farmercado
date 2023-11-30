@@ -1,4 +1,6 @@
 const User = require("../models/user");
+const Store = require("../models/store");
+const Product = require("../models/product");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
@@ -164,7 +166,139 @@ const delete_user = asyncHandler(async (req, res) => {
   }
 });
 
+const add_store_to_user = asyncHandler(async (req, res) => {
+  try {
+    const { userId, storeInfo, productsInfo } = req.body;
+    const newStore = new Store(storeInfo);
+
+    const products = productsInfo.map((product) => new Product(product));
+    newStore.products = products;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with ID ${userId} not found` });
+    }
+
+    user.stores.push(newStore);
+
+    await user.save();
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Add Store to User ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+const update_store_of_user = asyncHandler(async (req, res) => {
+  try {
+    const { userId, storeId, storeInfo, productsInfo } = req.body;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with ID ${userId} not found` });
+    }
+
+    const storeIndex = user.stores.findIndex(
+      (store) => store._id.toString() === storeId
+    );
+
+    if (storeIndex === -1) {
+      return res.status(404).json({
+        error: `Store with ID ${storeId} not found in user's account`,
+      });
+    }
+
+    const store = user.stores[storeIndex];
+
+    store.store_name = storeInfo.store_name || store.store_name;
+    store.store_image = storeInfo.store_image || store.store_image;
+    store.store_description =
+      storeInfo.store_description || store.store_description;
+    store.store_contact_number =
+      storeInfo.store_contact_number || store.store_contact_number;
+    store.store_status = storeInfo.store_status || store.store_status;
+    store.store_location = storeInfo.store_location || store.store_location;
+
+    productsInfo.forEach((productInfo) => {
+      const existingProductIndex = store.products.findIndex(
+        (existingProduct) => existingProduct._id.toString() === productInfo._id
+      );
+
+      if (existingProductIndex !== -1) {
+        store.products[existingProductIndex] = {
+          ...store.products[existingProductIndex],
+          ...productInfo,
+        };
+      } else {
+        store.products.push(new Product(productInfo));
+      }
+    });
+
+    await user.save();
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Update Store of User ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+const get_user_stores = asyncHandler(async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id);
+
+    if (!user) {
+      return res.status(404).json({ error: `User with ID ${id} not found` });
+    }
+
+    res.status(200).json(user.stores);
+  } catch (error) {
+    console.error("Get User Stores ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+const get_store = asyncHandler(async (req, res) => {
+  try {
+    const { userId, storeId } = req.params;
+
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with ID ${userId} not found` });
+    }
+
+    const store = user.stores.find((store) => store._id.toString() === storeId);
+
+    if (!store) {
+      return res.status(404).json({
+        error: `Store with ID ${storeId} not found in user's account`,
+      });
+    }
+
+    res.status(200).json(store);
+  } catch (error) {
+    console.error("Get Store ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = {
+  get_store,
+  get_user_stores,
+  update_store_of_user,
+  add_store_to_user,
   user_login,
   add_user,
   get_all_user,

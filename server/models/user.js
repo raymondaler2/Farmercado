@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const Store = require("./store");
 
 const userSchema = mongoose.Schema({
   first_name: {
@@ -30,6 +31,12 @@ const userSchema = mongoose.Schema({
   },
   profile_picture: {
     type: String,
+  },
+  profile_ratings: {
+    type: Number,
+  },
+  stores: {
+    type: [Store.schema],
   },
 });
 

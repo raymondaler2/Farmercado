@@ -4,12 +4,14 @@ import Login from "./pages/login.jsx";
 import NotFound from "./pages/notfound.jsx";
 import Register from "./pages/register.jsx";
 import Information from "./pages/Information.jsx";
+import Store from "./pages/store.jsx";
 
 const App = () => {
   return (
     <div>
       <Routes>
         <Route index element={<Home />} />
+        <Route path="/Store" element={<Store />} />
         <Route path="/Login" element={<Login />} />
         <Route path="/Information" element={<Information />} />
         <Route path="/Register" element={<Register />} />

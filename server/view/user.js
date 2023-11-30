@@ -9,10 +9,18 @@ const {
   delete_user,
   user_login,
   decode_token,
+  add_store_to_user,
+  update_store_of_user,
+  get_user_stores,
+  get_store,
 } = require("./../controllers/user");
 
 const router = express.Router();
-
+router.get("/:userId/stores/:storeId", get_store);
+router.get("/:id/stores", get_store);
+router.get("/:id/stores", get_user_stores);
+router.put("/update_store_of_user", update_store_of_user);
+router.post("/add_store_to_user", add_store_to_user);
 router.post("/decode_token", decode_token);
 router.post("/login", user_login);
 router.post("/", add_user);
