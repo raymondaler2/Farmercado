@@ -80,7 +80,7 @@ const Store = () => {
         `http://localhost:5000/api/user/${decryptedUserId}/stores/${storeToDelete._id}`
       )
       .then(() => {
-        setSnackbarOpen(true); // Open Snackbar on successful delete
+        setSnackbarOpen(true);
       });
 
     setDeleteDialogOpen(false);
@@ -92,10 +92,8 @@ const Store = () => {
 
   const handleSwitch = async (store) => {
     try {
-      // Toggle the store_status locally before making the request
       const newStatus = store.store_status === "Open" ? "Close" : "Open";
 
-      // Update the local state with the new status
       setStores((prevStores) =>
         prevStores.map((prevStore) =>
           prevStore._id === store._id
@@ -104,14 +102,12 @@ const Store = () => {
         )
       );
 
-      // Make the axios.put request
       await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
         userId: decryptedUserId,
         storeId: store._id,
         store_status: newStatus,
       });
     } catch (error) {
-      // Handle error if needed
       console.error("Handle Switch Error:", error.message);
     }
   };

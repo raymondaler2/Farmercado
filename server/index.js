@@ -15,7 +15,6 @@ const MONGO_URL = process.env.MONGO_URL;
 app.use(cors());
 app.use(express.json());
 
-// * Routes
 app.get("/", (req, res) => {
   res.send("API RESPONSE");
 });

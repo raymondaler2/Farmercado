@@ -206,7 +206,6 @@ const update_store_of_user = asyncHandler(async (req, res) => {
       products,
     } = req.body;
 
-    // Check if required data is present
     if (!userId || !storeId) {
       return res.status(400).json({ error: "Invalid request data" });
     }
@@ -224,23 +223,19 @@ const update_store_of_user = asyncHandler(async (req, res) => {
     );
 
     if (storeIndex === -1) {
-      return res
-        .status(404)
-        .json({
-          error: `Store with ID ${storeId} not found in user's account`,
-        });
+      return res.status(404).json({
+        error: `Store with ID ${storeId} not found in user's account`,
+      });
     }
 
     const store = user.stores[storeIndex];
 
-    // Update store properties if provided in the request
     if (store_name) store.store_name = store_name;
     if (store_description) store.store_description = store_description;
     if (store_contact_number) store.store_contact_number = store_contact_number;
     if (store_status) store.store_status = store_status;
     if (store_location) store.store_location = store_location;
 
-    // Update products if provided in the request
     if (products && Array.isArray(products)) {
       products.forEach((productInfo) => {
         const existingProductIndex = store.products.findIndex(
@@ -249,13 +244,11 @@ const update_store_of_user = asyncHandler(async (req, res) => {
         );
 
         if (existingProductIndex !== -1) {
-          // Update existing product
           store.products[existingProductIndex] = {
             ...store.products[existingProductIndex],
             ...productInfo,
           };
         } else {
-          // Add new product
           store.products.push(new Product(productInfo));
         }
       });
@@ -336,7 +329,7 @@ const delete_store = asyncHandler(async (req, res) => {
       });
     }
 
-    user.stores.splice(storeIndex, 1); // Remove the store from the array
+    user.stores.splice(storeIndex, 1);
 
     await user.save();
 

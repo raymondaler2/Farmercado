@@ -95,7 +95,6 @@ const Login = () => {
     const rememberedRememberMe = localStorage.getItem("rememberedRememberMe");
 
     if (rememberedUsername) {
-      // Decrypt the username using JWT_SECRET
       const decryptedUsername = CryptoJS.AES.decrypt(
         rememberedUsername,
         jwtSecret
@@ -104,7 +103,6 @@ const Login = () => {
     }
 
     if (rememberedPassword) {
-      // Decrypt the password using JWT_SECRET
       const decryptedPassword = CryptoJS.AES.decrypt(
         rememberedPassword,
         jwtSecret

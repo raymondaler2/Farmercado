@@ -3,14 +3,12 @@ import { Typography, Paper } from "@material-ui/core";
 
 const PasswordStrengthIndicator = ({ password }) => {
   const getStrength = () => {
-    // Password strength logic based on requirements
     const hasUpperCase = /[A-Z]/.test(password);
     const hasLowerCase = /[a-z]/.test(password);
     const hasNumber = /\d/.test(password);
     const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
     const hasMinLength = password.length >= 5;
 
-    // Update the conditions for a strong password
     if (
       hasUpperCase &&
       hasLowerCase &&
@@ -35,11 +33,11 @@ const PasswordStrengthIndicator = ({ password }) => {
     const strength = getStrength();
     switch (strength) {
       case "Strong":
-        return "#4CAF50"; // Green
+        return "#4CAF50";
       case "Moderate":
-        return "#FFC107"; // Yellow
+        return "#FFC107";
       case "Weak":
-        return "#FF5722"; // Red
+        return "#FF5722";
       default:
         return "";
     }
