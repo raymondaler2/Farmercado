@@ -30,8 +30,11 @@ import axios from "axios";
 import CryptoJS from "crypto-js";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import { GoogleMap, MarkerF } from "@react-google-maps/api";
+import default_avatar from "./../assets/default_avatar.jpg";
 
 const Store = () => {
+  const [selectedFileName, setSelectedFileName] = useState("No file selected.");
+  const [profilePicture, setProfilePicture] = useState(null);
   const [locationErrorSnackbarOpen, setLocationErrorSnackbarOpen] =
     useState(false);
   const [noResultsSnackbarOpen, setNoResultsSnackbarOpen] = useState(false);
@@ -61,6 +64,7 @@ const Store = () => {
   });
 
   const [newStoreInfo, setNewStoreInfo] = useState({
+    store_image: "",
     store_name: "",
     store_description: "",
     store_contact_number: "",
@@ -69,6 +73,15 @@ const Store = () => {
     products: [],
   });
   console.log("%c Line:64 🍪 newStoreInfo", "color:#3f7cff", newStoreInfo);
+
+  const convertFileToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result.split(",")[1]);
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  };
 
   const handleLocationSearch = (value) => {
     SetLocationSearch(value);
@@ -126,7 +139,8 @@ const Store = () => {
   };
 
   // Function to close new store dialog
-  const handleNewStoreDialogClose = () => {
+  const handleNewStoreDialogClose = (event, reason) => {
+    if (reason && reason == "backdropClick") return;
     setNewStoreDialogOpen(false);
   };
 
@@ -156,6 +170,24 @@ const Store = () => {
     setProductDialogOpen(false);
   };
 
+  const handleImageChange = (file) => {
+    setProfilePicture(URL.createObjectURL(file));
+    setSelectedFileName(file.name); // Set the selected file name
+
+    // Convert the file to base64 when sending to the database
+    convertFileToBase64(file)
+      .then((base64String) => {
+        // Now you can use the base64String as needed (e.g., send it to the database)
+        setNewStoreInfo((prevInfo) => ({
+          ...prevInfo,
+          store_image: base64String,
+        }));
+      })
+      .catch((error) => {
+        console.error("Error converting file to base64:", error.message);
+      });
+  };
+
   const fetchUserStores = async () => {
     const response = await axios.get(
       `http://localhost:5000/api/user/${decryptedUserId}/stores`
@@ -170,6 +202,18 @@ const Store = () => {
   const handleDeleteClick = (store) => {
     setStoreToDelete(store);
     setDeleteDialogOpen(true);
+  };
+
+  const truncateFilename = (filename, maxLength) => {
+    if (filename.length <= maxLength) {
+      return filename;
+    }
+
+    const extension = filename.split(".").pop();
+    const truncatedFilename =
+      filename.substring(0, maxLength - extension.length - 4) +
+      ` ... .${extension}`;
+    return truncatedFilename;
   };
 
   const handleSnackbarClose = (event, reason) => {
@@ -442,35 +486,30 @@ const Store = () => {
                     variant="contained"
                     onClick={handleLocateStore}
                     fullWidth
+                    style={{
+                      padding: "15px",
+                      color: "white",
+                      backgroundColor: "#039be5",
+                    }}
                   >
                     Locate
                   </Button>
                 </Grid>
               </Grid>
             </Grid>
-            <Grid item xs={12}>
+            <Grid item xs={6}>
               <TextField
+                fullWidth
                 label="Name"
                 value={newStoreInfo.store_name}
                 onChange={(e) =>
                   handleNewStoreInfoChange("store_name", e.target.value)
                 }
-                className="mb-12"
-                sx={{
-                  marginBottom: "1rem",
-                }}
               />
+            </Grid>
+            <Grid item xs={6}>
               <TextField
-                label="Description"
-                value={newStoreInfo.store_description}
-                onChange={(e) =>
-                  handleNewStoreInfoChange("store_description", e.target.value)
-                }
-                sx={{
-                  marginBottom: "1rem",
-                }}
-              />
-              <TextField
+                fullWidth
                 label="Number"
                 value={newStoreInfo.store_contact_number}
                 onChange={(e) =>
@@ -479,10 +518,63 @@ const Store = () => {
                     e.target.value
                   )
                 }
-                sx={{
-                  marginBottom: "1rem",
-                }}
               />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                value={newStoreInfo.store_description}
+                onChange={(e) =>
+                  handleNewStoreInfoChange("store_description", e.target.value)
+                }
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <div className="flex justify-center items-center">
+                <img
+                  src={profilePicture ?? default_avatar}
+                  alt="Profile"
+                  style={{
+                    width: "60%",
+                    borderRadius: "50%",
+                    marginTop: "10px",
+                  }}
+                />
+              </div>
+            </Grid>
+            <Grid item xs={12}>
+              <div className="upload-container-store mb-5">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChange(e.target.files[0])}
+                  style={{ display: "none" }}
+                  id="profile-picture-upload"
+                />
+                <label
+                  htmlFor="profile-picture-upload"
+                  className="upload-button"
+                >
+                  <Button
+                    variant="contained"
+                    component="span"
+                    style={{
+                      color: "white",
+                      backgroundColor: "#039be5",
+                      textTransform: "none",
+                    }}
+                  >
+                    Browse
+                  </Button>
+                </label>
+                <div className="upload-info">
+                  <p className="text-[#69717a]">
+                    {truncateFilename(selectedFileName, 20) ??
+                      "No file selected."}
+                  </p>
+                </div>
+              </div>
             </Grid>
           </Grid>
           <Divider>

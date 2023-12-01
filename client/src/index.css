@@ -10,6 +10,13 @@
   margin-top: 10px;
 }
 
+.upload-container-store {
+  display: flex;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 10px;
+}
+
 .upload-button {
   margin-right: 10px;
 }
