@@ -16,6 +16,7 @@
     "@material-ui/core": "^4.12.4",
     "@mui/icons-material": "^5.14.16",
     "@mui/material": "^5.14.17",
+    "@react-google-maps/api": "^2.19.2",
     "@supercharge/strings": "^2.0.0",
     "axios": "^1.6.2",
     "crypto-js": "^4.2.0",
