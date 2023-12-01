@@ -38,6 +38,8 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
 const Store = () => {
+  const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+  const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("No file selected.");
   const [profilePicture, setProfilePicture] = useState(null);
   const [locationErrorSnackbarOpen, setLocationErrorSnackbarOpen] =
@@ -67,7 +69,6 @@ const Store = () => {
       },
     },
   });
-
   const [newStoreInfo, setNewStoreInfo] = useState({
     store_image: "",
     store_name: "",
@@ -85,6 +86,35 @@ const Store = () => {
       },
     ],
   });
+  const [productImages, setProductImages] = useState(
+    Array(newStoreInfo.products.length).fill(null)
+  );
+
+  const handleProductImageChange = async (index, file) => {
+    setProductImages((prevImages) => {
+      const updatedImages = [...prevImages];
+      updatedImages[index] = URL.createObjectURL(file);
+      return updatedImages;
+    });
+
+    try {
+      const base64Image = await convertFileToBase64(file);
+
+      setNewStoreInfo((prevInfo) => {
+        const updatedProducts = [...prevInfo.products];
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          product_image: base64Image,
+        };
+        return {
+          ...prevInfo,
+          products: updatedProducts,
+        };
+      });
+    } catch (error) {
+      console.error("Error converting file to base64:", error.message);
+    }
+  };
 
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -93,10 +123,6 @@ const Store = () => {
       reader.onerror = (error) => reject(error);
       reader.readAsDataURL(file);
     });
-  };
-
-  const isNumber = (value) => {
-    return /^\d+$/.test(value);
   };
 
   const addNewProduct = () => {
@@ -199,23 +225,27 @@ const Store = () => {
   };
 
   const handleCreateStore = async () => {
-    const CreateStoreFormat = {
-      userId: decryptedUserId,
-      storeInfo: {
-        store_name: newStoreInfo?.store_name ?? "",
-        store_description: newStoreInfo?.store_description ?? "",
-        store_contact_number: newStoreInfo?.store_contact_number ?? "",
-        store_status: newStoreInfo?.store_status ?? "",
-        store_location: newStoreInfo?.store_location ?? "",
-      },
-      productsInfo: newStoreInfo?.products ?? [],
-    };
-    console.log(
-      "%c Line:209 🥑 CreateStoreFormat",
-      "color:#6ec1c2",
-      CreateStoreFormat
-    );
-    // handleNewStoreDialogClose();
+    try {
+      await axios.post(`http://localhost:5000/api/user/add_store_to_user`, {
+        userId: decryptedUserId,
+        storeInfo: {
+          store_name: newStoreInfo?.store_name ?? "",
+          store_description: newStoreInfo?.store_description ?? "",
+          store_contact_number: newStoreInfo?.store_contact_number ?? "",
+          store_status: newStoreInfo?.store_status ?? "",
+          store_location: newStoreInfo?.store_location ?? "",
+          store_image: newStoreInfo?.store_image ?? "",
+        },
+        productsInfo: newStoreInfo?.products ?? [],
+      });
+
+      setSuccessSnackbarOpen(true);
+    } catch (error) {
+      console.error("Error creating store:", error.message);
+      setErrorSnackbarOpen(true);
+    }
+
+    handleNewStoreDialogClose();
   };
 
   const handleProductButtonClick = (store) => {
@@ -260,8 +290,8 @@ const Store = () => {
   };
 
   const truncateFilename = (filename, maxLength) => {
-    if (filename.length <= maxLength) {
-      return filename;
+    if (!filename || filename.length <= maxLength) {
+      return filename || "";
     }
 
     const extension = filename.split(".").pop();
@@ -287,8 +317,6 @@ const Store = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    console.log("Deleting store:", storeToDelete);
-
     await axios
       .delete(
         `http://localhost:5000/api/user/${decryptedUserId}/stores/${storeToDelete._id}`
@@ -645,121 +673,158 @@ const Store = () => {
             <Chip label="Produce List" color="success" />
           </Divider>
           {/* Nested Product fields */}
-          {newStoreInfo.products.map((product, index) => (
-            <>
-              <Grid
-                container
-                spacing={2}
-                key={index}
-                sx={{ marginBottom: "2rem" }}
-              >
-                <Grid item xs={12}>
-                  <div className="flex items-center mb-2 mt-3">
-                    <IconButton
-                      onClick={() => addNewProduct()}
-                      style={{
-                        color: "#8BC34A",
-                        backgroundColor: "transparent",
-                      }}
-                    >
-                      <AddCircleOutlineIcon />
-                    </IconButton>
-                    {newStoreInfo.products.length > 1 && (
+          {newStoreInfo.products.map((product, index) => {
+            return (
+              <>
+                <Grid
+                  container
+                  spacing={2}
+                  key={index}
+                  sx={{ marginBottom: "2rem" }}
+                >
+                  <Grid item xs={12}>
+                    <div className="flex items-center mb-2 mt-3">
                       <IconButton
-                        onClick={() =>
-                          handleNewProductChange(index, "remove", null)
-                        }
+                        onClick={() => addNewProduct()}
                         style={{
-                          color: "#FF5722",
+                          color: "#8BC34A",
                           backgroundColor: "transparent",
                         }}
                       >
-                        <RemoveCircleOutlineIcon />
+                        <AddCircleOutlineIcon />
                       </IconButton>
-                    )}
-                  </div>
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label={`Name`}
-                    value={product?.product_name}
-                    onChange={(e) =>
-                      handleNewProductChange(
-                        index,
-                        "product_name",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    type="number"
-                    label={`Count`}
-                    value={product?.product_count}
-                    onChange={(e) =>
-                      handleNewProductChange(
-                        index,
-                        "product_count",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth
-                    label={`Price`}
-                    value={product?.product_price}
-                    onChange={(e) =>
-                      handleNewProductChange(
-                        index,
-                        "product_price",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <FormControl fullWidth>
-                    <InputLabel id="select-label">Status</InputLabel>
-                    <Select
-                      labelId="select-label"
-                      label="Status"
-                      value={product?.product_status}
+                      {newStoreInfo.products.length > 1 && (
+                        <IconButton
+                          onClick={() =>
+                            handleNewProductChange(index, "remove", null)
+                          }
+                          style={{
+                            color: "#FF5722",
+                            backgroundColor: "transparent",
+                          }}
+                        >
+                          <RemoveCircleOutlineIcon />
+                        </IconButton>
+                      )}
+                    </div>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      label={`Name`}
+                      value={product?.product_name}
                       onChange={(e) =>
                         handleNewProductChange(
                           index,
-                          "product_status",
+                          "product_name",
                           e.target.value
                         )
                       }
-                    >
-                      <MenuItem value="Available">Available</MenuItem>
-                      <MenuItem value="Out of Stock">Out of Stock</MenuItem>
-                    </Select>
-                  </FormControl>
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      type="number"
+                      label={`Count`}
+                      value={product?.product_count}
+                      onChange={(e) =>
+                        handleNewProductChange(
+                          index,
+                          "product_count",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      fullWidth
+                      label={`Price`}
+                      value={product?.product_price}
+                      onChange={(e) =>
+                        handleNewProductChange(
+                          index,
+                          "product_price",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="select-label">Status</InputLabel>
+                      <Select
+                        labelId="select-label"
+                        label="Status"
+                        value={product?.product_status}
+                        onChange={(e) =>
+                          handleNewProductChange(
+                            index,
+                            "product_status",
+                            e.target.value
+                          )
+                        }
+                      >
+                        <MenuItem value="Available">Available</MenuItem>
+                        <MenuItem value="Out of Stock">Out of Stock</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <div className="flex justify-center items-center">
+                      <img
+                        src={productImages[index] ?? default_avatar}
+                        alt={`Product ${index + 1}`}
+                        style={{
+                          width: "40%",
+                          marginTop: "10px",
+                        }}
+                      />
+                    </div>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <div className="upload-container-store mb-5">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleProductImageChange(index, e.target.files[0])
+                        }
+                        style={{ display: "none" }}
+                        id={`product-image-upload-${index}`}
+                      />
+                      <label
+                        htmlFor={`product-image-upload-${index}`}
+                        className="upload-button"
+                      >
+                        <Button
+                          variant="contained"
+                          component="span"
+                          style={{
+                            color: "white",
+                            backgroundColor: "#039be5",
+                            textTransform: "none",
+                          }}
+                        >
+                          Browse
+                        </Button>
+                      </label>
+                      <div className="upload-info">
+                        <p className="text-[#69717a]">
+                          {truncateFilename(
+                            product?.product_image?.name || "",
+                            20
+                          ) || "No file selected."}
+                        </p>
+                      </div>
+                    </div>
+                  </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label={`Image`}
-                    value={product?.product_image}
-                    onChange={(e) =>
-                      handleNewProductChange(
-                        index,
-                        "product_image",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Grid>
-              </Grid>
-              <Divider></Divider>
-            </>
-          ))}
+                <Divider></Divider>
+              </>
+            );
+          })}
         </DialogContent>
         <DialogActions>
           <Button
@@ -845,6 +910,50 @@ const Store = () => {
           severity="warning"
         >
           No results found for the location search
+        </MuiAlert>
+      </Snackbar>
+      <Snackbar
+        open={successSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={(event, reason) => {
+          if (reason === "clickaway") {
+            return;
+          }
+          setSuccessSnackbarOpen(false);
+          window.location.reload();
+        }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ marginTop: "5rem" }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={(event, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
+            setSuccessSnackbarOpen(false);
+            window.location.reload();
+          }}
+          severity="success"
+        >
+          Store Created Successfully
+        </MuiAlert>
+      </Snackbar>
+      <Snackbar
+        open={errorSnackbarOpen}
+        autoHideDuration={3000}
+        onClose={() => setErrorSnackbarOpen(false)}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ marginTop: "5rem" }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={() => setErrorSnackbarOpen(false)}
+          severity="error"
+        >
+          Error creating store
         </MuiAlert>
       </Snackbar>
     </div>
