@@ -155,6 +155,7 @@ const Register = () => {
           </h2>
           <form>
             <TextField
+              required
               label="First Name"
               fullWidth
               margin="normal"
@@ -163,6 +164,7 @@ const Register = () => {
               variant="outlined"
             />
             <TextField
+              required
               label="Last Name"
               fullWidth
               margin="normal"
@@ -171,6 +173,7 @@ const Register = () => {
               variant="outlined"
             />
             <TextField
+              required
               label="Username"
               fullWidth
               margin="normal"
@@ -179,6 +182,7 @@ const Register = () => {
               variant="outlined"
             />
             <TextField
+              required
               label="Email Address"
               fullWidth
               margin="normal"
@@ -187,6 +191,7 @@ const Register = () => {
               variant="outlined"
             />
             <TextField
+              required
               label="Confirm Email Address"
               fullWidth
               margin="normal"
@@ -197,6 +202,7 @@ const Register = () => {
               variant="outlined"
             />
             <TextField
+              required
               label="Password"
               type={showPassword ? "text" : "password"}
               fullWidth
@@ -222,6 +228,7 @@ const Register = () => {
               }}
             />
             <TextField
+              required
               label="Confirm Password"
               type={showconfirmPassword ? "text" : "password"}
               fullWidth

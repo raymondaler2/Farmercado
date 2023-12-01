@@ -38,6 +38,8 @@ import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
 const Store = () => {
+  const [validationSnackbarOpen, setValidationSnackbarOpen] = useState(false);
+  const [locateButtonClicked, setLocateButtonClicked] = useState(false);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("No file selected.");
@@ -61,6 +63,7 @@ const Store = () => {
   );
   const [newStoreDialogOpen, setNewStoreDialogOpen] = useState(false);
   const [locationSearch, SetLocationSearch] = useState("");
+  const [validationError, setValidationError] = useState(null);
   const [selectedLocation, setSelectedLocation] = useState({
     geometry: {
       location: {
@@ -89,8 +92,19 @@ const Store = () => {
   const [productImages, setProductImages] = useState(
     Array(newStoreInfo.products.length).fill(null)
   );
+  const [productImageFileNames, setProductImageFileNames] = useState(
+    Array(newStoreInfo.products.length).fill("No file selected.")
+  );
 
   const handleProductImageChange = async (index, file) => {
+    const fileName = file.name;
+
+    setProductImageFileNames((prevFileNames) => {
+      const updatedFileNames = [...prevFileNames];
+      updatedFileNames[index] = fileName;
+      return updatedFileNames;
+    });
+
     setProductImages((prevImages) => {
       const updatedImages = [...prevImages];
       updatedImages[index] = URL.createObjectURL(file);
@@ -114,6 +128,10 @@ const Store = () => {
     } catch (error) {
       console.error("Error converting file to base64:", error.message);
     }
+  };
+
+  const handleValidationSnackbarClose = () => {
+    setValidationSnackbarOpen(false);
   };
 
   const convertFileToBase64 = (file) => {
@@ -170,6 +188,7 @@ const Store = () => {
         });
 
         if (isInCebu) {
+          setLocateButtonClicked(true);
           setSelectedLocation(firstResult);
           setNewStoreInfo((prevInfo) => ({
             ...prevInfo,
@@ -196,10 +215,40 @@ const Store = () => {
 
   const handleNewStoreDialogClose = (event, reason) => {
     if (reason && reason == "backdropClick") return;
+    setNewStoreInfo({
+      store_image: "",
+      store_name: "",
+      store_description: "",
+      store_contact_number: "",
+      store_status: "Close",
+      store_location: {},
+      products: [
+        {
+          product_name: "",
+          product_count: "",
+          product_price: "",
+          product_status: "Available",
+          product_image: "",
+        },
+      ],
+    });
+    SetLocationSearch("");
+    setProfilePicture(null);
+    setProductImages(Array(newStoreInfo.products.length).fill(null));
+    setSelectedFileName("No file selected.");
+    setProductImageFileNames(
+      Array(newStoreInfo.products.length).fill("No file selected.")
+    );
     setNewStoreDialogOpen(false);
   };
 
   const handleNewStoreInfoChange = (field, value) => {
+    if (field === "store_contact_number") {
+      const isValidNumber = /^[0-9]*$/.test(value);
+      if (!isValidNumber) {
+        return;
+      }
+    }
     setNewStoreInfo((prevInfo) => ({
       ...prevInfo,
       [field]: value,
@@ -210,6 +259,18 @@ const Store = () => {
     if (subField === "remove") {
       removeProduct(index);
     } else {
+      if (subField === "product_count") {
+        const isValidNumber = /^[0-9]*$/.test(value);
+        if (!isValidNumber) {
+          return;
+        }
+      }
+      if (subField === "product_price") {
+        const isValidNumber = /^(\d+(\.\d*)?|\.\d*)?$/.test(value);
+        if (!isValidNumber) {
+          return;
+        }
+      }
       setNewStoreInfo((prevInfo) => {
         const updatedProducts = [...prevInfo.products];
         updatedProducts[index] = {
@@ -224,7 +285,40 @@ const Store = () => {
     }
   };
 
+  const validateStoreInfo = () => {
+    if (locationSearch && !locateButtonClicked) {
+      return "Invalid Store location.";
+    }
+
+    if (
+      !newStoreInfo.store_name ||
+      !newStoreInfo.store_location ||
+      !newStoreInfo.store_contact_number
+    ) {
+      return "Invalid store information.";
+    }
+
+    for (const product of newStoreInfo.products) {
+      if (
+        !product.product_name ||
+        !product.product_count ||
+        !product.product_price
+      ) {
+        return "Invalid product information.";
+      }
+    }
+
+    return "";
+  };
+
   const handleCreateStore = async () => {
+    const error = validateStoreInfo();
+    if (!!error) {
+      setValidationError(error);
+      setValidationSnackbarOpen(true);
+      return;
+    }
+
     try {
       await axios.post(`http://localhost:5000/api/user/add_store_to_user`, {
         userId: decryptedUserId,
@@ -416,7 +510,6 @@ const Store = () => {
                     </TableCell>
                     <TableCell>{store.store_name}</TableCell>
                     <TableCell>{`${store?.store_location?.formatted_address}`}</TableCell>
-
                     <TableCell>
                       {store.products.length > 0 && (
                         <IconButton
@@ -437,8 +530,6 @@ const Store = () => {
           </TableContainer>
         </div>
       </div>
-
-      {/* Product List Dialog */}
       <Dialog
         PaperProps={{ style: { padding: "20px" } }}
         open={productDialogOpen}
@@ -483,8 +574,6 @@ const Store = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Delete Confirmation Dialog */}
       <Dialog
         open={deleteDialogOpen}
         onClose={handleDeleteCancel}
@@ -513,8 +602,6 @@ const Store = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* New Store Dialog */}
       <Dialog
         fullWidth={true}
         maxWidth={"md"}
@@ -564,6 +651,7 @@ const Store = () => {
                 </div>
                 <Grid item xs={8}>
                   <TextField
+                    required
                     label="Location"
                     value={locationSearch}
                     onChange={(e) => handleLocationSearch(e.target.value)}
@@ -591,6 +679,7 @@ const Store = () => {
             </Grid>
             <Grid item xs={6}>
               <TextField
+                required
                 fullWidth
                 label="Name"
                 value={newStoreInfo.store_name}
@@ -601,6 +690,7 @@ const Store = () => {
             </Grid>
             <Grid item xs={6}>
               <TextField
+                required
                 fullWidth
                 label="Number"
                 value={newStoreInfo.store_contact_number}
@@ -672,7 +762,6 @@ const Store = () => {
           <Divider>
             <Chip label="Produce List" color="success" />
           </Divider>
-          {/* Nested Product fields */}
           {newStoreInfo.products.map((product, index) => {
             return (
               <>
@@ -710,6 +799,7 @@ const Store = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
+                      required
                       fullWidth
                       label={`Name`}
                       value={product?.product_name}
@@ -724,8 +814,8 @@ const Store = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
+                      required
                       fullWidth
-                      type="number"
                       label={`Count`}
                       value={product?.product_count}
                       onChange={(e) =>
@@ -739,6 +829,7 @@ const Store = () => {
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
+                      required
                       fullWidth
                       label={`Price`}
                       value={product?.product_price}
@@ -813,7 +904,7 @@ const Store = () => {
                       <div className="upload-info">
                         <p className="text-[#69717a]">
                           {truncateFilename(
-                            product?.product_image?.name || "",
+                            productImageFileNames[index] || "",
                             20
                           ) || "No file selected."}
                         </p>
@@ -881,7 +972,7 @@ const Store = () => {
       </Snackbar>
       <Snackbar
         open={locationErrorSnackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={2000}
         onClose={() => setLocationErrorSnackbarOpen(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ marginTop: "5rem" }}
@@ -892,13 +983,12 @@ const Store = () => {
           onClose={() => setLocationErrorSnackbarOpen(false)}
           severity="warning"
         >
-          Location is outside of Cebu, Philippines
+          Outside of Cebu, Philippines
         </MuiAlert>
       </Snackbar>
-
       <Snackbar
         open={noResultsSnackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={1000}
         onClose={() => setNoResultsSnackbarOpen(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ marginTop: "5rem" }}
@@ -914,7 +1004,7 @@ const Store = () => {
       </Snackbar>
       <Snackbar
         open={successSnackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={1000}
         onClose={(event, reason) => {
           if (reason === "clickaway") {
             return;
@@ -942,7 +1032,7 @@ const Store = () => {
       </Snackbar>
       <Snackbar
         open={errorSnackbarOpen}
-        autoHideDuration={3000}
+        autoHideDuration={1000}
         onClose={() => setErrorSnackbarOpen(false)}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         sx={{ marginTop: "5rem" }}
@@ -954,6 +1044,22 @@ const Store = () => {
           severity="error"
         >
           Error creating store
+        </MuiAlert>
+      </Snackbar>
+      <Snackbar
+        open={validationSnackbarOpen}
+        autoHideDuration={2000}
+        onClose={handleValidationSnackbarClose}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ marginTop: "5rem" }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={handleValidationSnackbarClose}
+          severity="error"
+        >
+          {validationError}
         </MuiAlert>
       </Snackbar>
     </div>
