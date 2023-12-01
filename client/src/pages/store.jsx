@@ -22,6 +22,9 @@ import {
   Grid,
   Divider,
   Chip,
+  Select,
+  MenuItem,
+  InputLabel,
 } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
@@ -31,6 +34,8 @@ import CryptoJS from "crypto-js";
 import InventoryIcon from "@mui/icons-material/Inventory";
 import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import default_avatar from "./../assets/default_avatar.jpg";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 
 const Store = () => {
   const [selectedFileName, setSelectedFileName] = useState("No file selected.");
@@ -70,9 +75,16 @@ const Store = () => {
     store_contact_number: "",
     store_status: "Close",
     store_location: {},
-    products: [],
+    products: [
+      {
+        product_name: "",
+        product_count: "",
+        product_price: "",
+        product_status: "Available",
+        product_image: "",
+      },
+    ],
   });
-  console.log("%c Line:64 🍪 newStoreInfo", "color:#3f7cff", newStoreInfo);
 
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
@@ -81,6 +93,26 @@ const Store = () => {
       reader.onerror = (error) => reject(error);
       reader.readAsDataURL(file);
     });
+  };
+
+  const isNumber = (value) => {
+    return /^\d+$/.test(value);
+  };
+
+  const addNewProduct = () => {
+    setNewStoreInfo((prevInfo) => ({
+      ...prevInfo,
+      products: [
+        ...prevInfo.products,
+        {
+          product_name: "",
+          product_count: "",
+          product_price: "",
+          product_status: "Available",
+          product_image: "",
+        },
+      ],
+    }));
   };
 
   const handleLocationSearch = (value) => {
@@ -107,7 +139,6 @@ const Store = () => {
       if (response.data.results.length > 0) {
         const firstResult = response.data.results[0];
 
-        // Check if the located location is in Cebu, Philippines
         const isInCebu = firstResult.address_components.some((component) => {
           return component.long_name.toLowerCase() === "cebu";
         });
@@ -119,17 +150,16 @@ const Store = () => {
             store_location: firstResult,
           }));
         } else {
-          setLocationErrorSnackbarOpen(true); // Show Snackbar for location error
+          setLocationErrorSnackbarOpen(true);
         }
       } else {
-        setNoResultsSnackbarOpen(true); // Show Snackbar for no results
+        setNoResultsSnackbarOpen(true);
       }
     } catch (error) {
       console.error("Error during location search:", error.message);
     }
   };
 
-  // Function to open new store dialog
   const handleNewStoreClick = () => {
     if (stores.length === 2) {
       setSnackbarOpenError(true);
@@ -138,13 +168,11 @@ const Store = () => {
     }
   };
 
-  // Function to close new store dialog
   const handleNewStoreDialogClose = (event, reason) => {
     if (reason && reason == "backdropClick") return;
     setNewStoreDialogOpen(false);
   };
 
-  // Function to handle changes in new store info text fields
   const handleNewStoreInfoChange = (field, value) => {
     setNewStoreInfo((prevInfo) => ({
       ...prevInfo,
@@ -152,13 +180,42 @@ const Store = () => {
     }));
   };
 
-  // Function to create a new store
-  const handleCreateStore = async () => {
-    // Perform API call to create a new store using newStoreInfo
-    // ...
+  const handleNewProductChange = (index, subField, value) => {
+    if (subField === "remove") {
+      removeProduct(index);
+    } else {
+      setNewStoreInfo((prevInfo) => {
+        const updatedProducts = [...prevInfo.products];
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          [subField]: value,
+        };
+        return {
+          ...prevInfo,
+          products: updatedProducts,
+        };
+      });
+    }
+  };
 
-    // Close the new store dialog after creating the store
-    handleNewStoreDialogClose();
+  const handleCreateStore = async () => {
+    const CreateStoreFormat = {
+      userId: decryptedUserId,
+      storeInfo: {
+        store_name: newStoreInfo?.store_name ?? "",
+        store_description: newStoreInfo?.store_description ?? "",
+        store_contact_number: newStoreInfo?.store_contact_number ?? "",
+        store_status: newStoreInfo?.store_status ?? "",
+        store_location: newStoreInfo?.store_location ?? "",
+      },
+      productsInfo: newStoreInfo?.products ?? [],
+    };
+    console.log(
+      "%c Line:209 🥑 CreateStoreFormat",
+      "color:#6ec1c2",
+      CreateStoreFormat
+    );
+    // handleNewStoreDialogClose();
   };
 
   const handleProductButtonClick = (store) => {
@@ -172,12 +229,10 @@ const Store = () => {
 
   const handleImageChange = (file) => {
     setProfilePicture(URL.createObjectURL(file));
-    setSelectedFileName(file.name); // Set the selected file name
+    setSelectedFileName(file.name);
 
-    // Convert the file to base64 when sending to the database
     convertFileToBase64(file)
       .then((base64String) => {
-        // Now you can use the base64String as needed (e.g., send it to the database)
         setNewStoreInfo((prevInfo) => ({
           ...prevInfo,
           store_image: base64String,
@@ -245,6 +300,13 @@ const Store = () => {
     setDeleteDialogOpen(false);
   };
 
+  const removeProduct = (index) => {
+    setNewStoreInfo((prevInfo) => ({
+      ...prevInfo,
+      products: prevInfo.products.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
   };
@@ -272,7 +334,6 @@ const Store = () => {
   };
 
   useEffect(() => {
-    // Load Google Maps API only once
     if (!mapLoaded) {
       setMapLoaded(true);
     }
@@ -362,14 +423,14 @@ const Store = () => {
           <List>
             {selectedStoreProducts.map((product) => {
               return (
-                <ListItem key={product._id}>
+                <ListItem key={product?._id}>
                   <ListItemText
-                    primary={product.product_name}
+                    primary={product?.product_name}
                     style={{ marginRight: "10px" }}
                   />
                   <ListItemText
                     primary={
-                      <Chip color="warning" label={product.product_count} />
+                      <Chip color="warning" label={product?.product_count} />
                     }
                     style={{ marginLeft: "10px", textAlign: "right" }}
                   />
@@ -490,6 +551,9 @@ const Store = () => {
                       padding: "15px",
                       color: "white",
                       backgroundColor: "#039be5",
+                      textTransform: "none",
+                      fontSize: "16px",
+                      fontWeight: "Bold",
                     }}
                   >
                     Locate
@@ -581,30 +645,121 @@ const Store = () => {
             <Chip label="Produce List" color="success" />
           </Divider>
           {/* Nested Product fields */}
-          <TextField
-            label="Product Name"
-            // value={newStoreInfo.products[0].product_name}
-            onChange={(e) =>
-              handleNewStoreInfoChange(
-                "products",
-                0,
-                "product_name",
-                e.target.value
-              )
-            }
-          />
-          <TextField
-            label="Product Count"
-            // value={newStoreInfo.products[0].product_count}
-            onChange={(e) =>
-              handleNewStoreInfoChange(
-                "products",
-                0,
-                "product_count",
-                e.target.value
-              )
-            }
-          />
+          {newStoreInfo.products.map((product, index) => (
+            <>
+              <Grid
+                container
+                spacing={2}
+                key={index}
+                sx={{ marginBottom: "2rem" }}
+              >
+                <Grid item xs={12}>
+                  <div className="flex items-center mb-2 mt-3">
+                    <IconButton
+                      onClick={() => addNewProduct()}
+                      style={{
+                        color: "#8BC34A",
+                        backgroundColor: "transparent",
+                      }}
+                    >
+                      <AddCircleOutlineIcon />
+                    </IconButton>
+                    {newStoreInfo.products.length > 1 && (
+                      <IconButton
+                        onClick={() =>
+                          handleNewProductChange(index, "remove", null)
+                        }
+                        style={{
+                          color: "#FF5722",
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        <RemoveCircleOutlineIcon />
+                      </IconButton>
+                    )}
+                  </div>
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label={`Name`}
+                    value={product?.product_name}
+                    onChange={(e) =>
+                      handleNewProductChange(
+                        index,
+                        "product_name",
+                        e.target.value
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    type="number"
+                    label={`Count`}
+                    value={product?.product_count}
+                    onChange={(e) =>
+                      handleNewProductChange(
+                        index,
+                        "product_count",
+                        e.target.value
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <TextField
+                    fullWidth
+                    label={`Price`}
+                    value={product?.product_price}
+                    onChange={(e) =>
+                      handleNewProductChange(
+                        index,
+                        "product_price",
+                        e.target.value
+                      )
+                    }
+                  />
+                </Grid>
+                <Grid item xs={6}>
+                  <FormControl fullWidth>
+                    <InputLabel id="select-label">Status</InputLabel>
+                    <Select
+                      labelId="select-label"
+                      label="Status"
+                      value={product?.product_status}
+                      onChange={(e) =>
+                        handleNewProductChange(
+                          index,
+                          "product_status",
+                          e.target.value
+                        )
+                      }
+                    >
+                      <MenuItem value="Available">Available</MenuItem>
+                      <MenuItem value="Out of Stock">Out of Stock</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+                <Grid item xs={12}>
+                  <TextField
+                    fullWidth
+                    label={`Image`}
+                    value={product?.product_image}
+                    onChange={(e) =>
+                      handleNewProductChange(
+                        index,
+                        "product_image",
+                        e.target.value
+                      )
+                    }
+                  />
+                </Grid>
+              </Grid>
+              <Divider></Divider>
+            </>
+          ))}
         </DialogContent>
         <DialogActions>
           <Button
@@ -672,7 +827,7 @@ const Store = () => {
           onClose={() => setLocationErrorSnackbarOpen(false)}
           severity="warning"
         >
-          Located location is outside of Cebu, Philippines
+          Location is outside of Cebu, Philippines
         </MuiAlert>
       </Snackbar>
 
