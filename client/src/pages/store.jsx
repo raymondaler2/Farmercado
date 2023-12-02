@@ -43,6 +43,8 @@ const Store = () => {
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("No file selected.");
+  const [selectedFileNameUpdate, setSelectedFileNameUpdate] =
+    useState("No file selected.");
   const [profilePicture, setProfilePicture] = useState(null);
   const [locationErrorSnackbarOpen, setLocationErrorSnackbarOpen] =
     useState(false);
@@ -64,6 +66,9 @@ const Store = () => {
   const [newStoreDialogOpen, setNewStoreDialogOpen] = useState(false);
   const [locationSearch, SetLocationSearch] = useState("");
   const [validationError, setValidationError] = useState(null);
+  const [selectedStore, setSelectedStore] = useState(null);
+  console.log("%c Line:68 🌽 selectedStore", "color:#b03734", selectedStore);
+  const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState({
     geometry: {
       location: {
@@ -134,6 +139,34 @@ const Store = () => {
     setValidationSnackbarOpen(false);
   };
 
+  const fetchStoreData = async (store) => {
+    const { _id } = store;
+    const result = await axios.get(
+      `http://localhost:5000/api/user/${decryptedUserId}/stores/${_id}`
+    );
+    setSelectedStore(result.data);
+  };
+
+  // Function to handle opening the update dialog
+  const handleUpdateClick = (store) => {
+    fetchStoreData(store);
+    setUpdateDialogOpen(true);
+  };
+
+  // Function to handle closing the update dialog
+  const handleUpdateDialogClose = () => {
+    setSelectedStore(null);
+    setUpdateDialogOpen(false);
+  };
+
+  // Function to handle updating the store
+  const handleUpdateStore = () => {
+    // Perform the update logic here based on the values in the text fields
+    // You can log or send an update request to your backend
+    console.log("Updated store:", selectedStore);
+    handleUpdateDialogClose();
+  };
+
   const convertFileToBase64 = (file) => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -190,6 +223,7 @@ const Store = () => {
         if (isInCebu) {
           setLocateButtonClicked(true);
           setSelectedLocation(firstResult);
+          SetLocationSearch(firstResult.formatted_address);
           setNewStoreInfo((prevInfo) => ({
             ...prevInfo,
             store_location: firstResult,
@@ -202,6 +236,56 @@ const Store = () => {
       }
     } catch (error) {
       console.error("Error during location search:", error.message);
+    }
+  };
+
+  const handleLocateStoreUpdate = async () => {
+    if (!selectedStore?.store_location?.formatted_address) {
+      console.warn("No location to search");
+      return;
+    }
+
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const baseUrl = "https://maps.googleapis.com/maps/api/geocode/json";
+
+    try {
+      const response = await axios.get(baseUrl, {
+        params: {
+          address: selectedStore?.store_location?.formatted_address,
+          key: apiKey,
+        },
+      });
+
+      if (response.data.results.length > 0) {
+        const firstResult = response.data.results[0];
+
+        const isInCebu = firstResult.address_components.some((component) => {
+          return component.long_name.toLowerCase() === "cebu";
+        });
+
+        if (isInCebu) {
+          // setLocateButtonClicked(true);
+          // setSelectedLocation(firstResult);
+          // SetLocationSearch(firstResult.formatted_address);
+          // setNewStoreInfo((prevInfo) => ({
+          //   ...prevInfo,
+          //   store_location: firstResult,
+          // }));
+          setSelectedStore((prevStore) => ({
+            ...prevStore,
+            store_location: firstResult,
+          }));
+        } else {
+          // setLocationErrorSnackbarOpen(true);
+        }
+      } else {
+        // setNoResultsSnackbarOpen(true);
+      }
+    } catch (error) {
+      console.error(
+        "Error during store update location search:",
+        error.message
+      );
     }
   };
 
@@ -347,6 +431,10 @@ const Store = () => {
     setProductDialogOpen(true);
   };
 
+  const base64ToImageUrl = (base64String) => {
+    return `data:image/jpeg;base64,${base64String}`;
+  };
+
   const handleProductDialogClose = () => {
     setProductDialogOpen(false);
   };
@@ -364,6 +452,25 @@ const Store = () => {
       })
       .catch((error) => {
         console.error("Error converting file to base64:", error.message);
+      });
+  };
+
+  const handleImageChangeUpdate = (file) => {
+    setSelectedStore((prevStore) => ({
+      ...prevStore,
+      store_image: file,
+    }));
+
+    setSelectedFileNameUpdate(file.name);
+    convertFileToBase64(file)
+      .then((base64String) => {
+        setSelectedStore((prevStore) => ({
+          ...prevStore,
+          store_image: base64String,
+        }));
+      })
+      .catch((error) => {
+        console.error("Error converting file to base64 Update:", error.message);
       });
   };
 
@@ -508,8 +615,18 @@ const Store = () => {
                         />
                       </FormControl>
                     </TableCell>
-                    <TableCell>{store.store_name}</TableCell>
-                    <TableCell>{`${store?.store_location?.formatted_address}`}</TableCell>
+                    <TableCell
+                      onClick={() => handleUpdateClick(store)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {store.store_name}
+                    </TableCell>
+                    <TableCell
+                      onClick={() => handleUpdateClick(store)}
+                      style={{ cursor: "pointer" }}
+                    >
+                      {`${store?.store_location?.formatted_address}`}
+                    </TableCell>
                     <TableCell>
                       {store.products.length > 0 && (
                         <IconButton
@@ -1062,6 +1179,225 @@ const Store = () => {
           {validationError}
         </MuiAlert>
       </Snackbar>
+      <Dialog
+        fullWidth={true}
+        maxWidth={"md"}
+        PaperProps={{ style: { padding: "20px" } }}
+        open={updateDialogOpen}
+        onClose={handleUpdateDialogClose}
+      >
+        <DialogContent>
+          <Divider>
+            <Chip label="Store Information" color="success" />
+          </Divider>
+          <Grid className="pt-5" container spacing={2}>
+            <Grid item xs={12}>
+              <Grid container spacing={2} alignItems="center">
+                <div
+                  style={{
+                    height: "40vh",
+                    width: "100%",
+                    paddingTop: "1rem",
+                    paddingBottom: "1rem",
+                  }}
+                >
+                  <GoogleMap
+                    mapContainerStyle={{
+                      height: "100%",
+                      width: "100%",
+                    }}
+                    zoom={15}
+                    center={{
+                      lat: selectedStore?.store_location.geometry.location.lat,
+                      lng: selectedStore?.store_location.geometry.location.lng,
+                    }}
+                    onLoad={(map) => {
+                      if (!mapRef.current) {
+                        mapRef.current = map;
+                        setMapLoaded(true);
+                      }
+                    }}
+                  >
+                    <MarkerF
+                      position={{
+                        lat: selectedStore?.store_location.geometry.location
+                          .lat,
+                        lng: selectedStore?.store_location.geometry.location
+                          .lng,
+                      }}
+                    />
+                  </GoogleMap>
+                </div>
+                <Grid item xs={8}>
+                  <TextField
+                    required
+                    label="Location"
+                    value={
+                      selectedStore?.store_location?.formatted_address || ""
+                    }
+                    onChange={(e) => {
+                      setSelectedStore((prevStore) => ({
+                        ...prevStore,
+                        store_location: {
+                          ...prevStore.store_location,
+                          formatted_address: e.target.value,
+                        },
+                      }));
+                    }}
+                    fullWidth
+                  />
+                </Grid>
+                <Grid item xs={4}>
+                  <Button
+                    variant="contained"
+                    onClick={handleLocateStoreUpdate}
+                    fullWidth
+                    style={{
+                      padding: "15px",
+                      color: "white",
+                      backgroundColor: "#039be5",
+                      textTransform: "none",
+                      fontSize: "16px",
+                      fontWeight: "Bold",
+                    }}
+                  >
+                    Locate
+                  </Button>
+                </Grid>
+              </Grid>
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                required
+                fullWidth
+                label="Name"
+                value={selectedStore?.store_name || ""}
+                onChange={(e) => {
+                  setSelectedStore((prevStore) => ({
+                    ...prevStore,
+                    store_name: e.target.value,
+                  }));
+                }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                required
+                fullWidth
+                label="Number"
+                value={selectedStore?.store_contact_number || ""}
+                onChange={(e) => {
+                  setSelectedStore((prevStore) => ({
+                    ...prevStore,
+                    store_contact_number: e.target.value,
+                  }));
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Description"
+                value={selectedStore?.store_description || ""}
+                onChange={(e) => {
+                  setSelectedStore((prevStore) => ({
+                    ...prevStore,
+                    store_description: e.target.value,
+                  }));
+                }}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <div className="flex justify-center items-center">
+                <img
+                  src={
+                    base64ToImageUrl(selectedStore?.store_image) ??
+                    default_avatar
+                  }
+                  alt="Profile"
+                  style={{
+                    width: "60%",
+                    borderRadius: "50%",
+                    marginTop: "10px",
+                  }}
+                />
+              </div>
+            </Grid>
+            <Grid item xs={12}>
+              <div className="upload-container-store mb-5">
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => handleImageChangeUpdate(e.target.files[0])}
+                  style={{ display: "none" }}
+                  id="profile-picture-upload"
+                />
+                <label
+                  htmlFor="profile-picture-upload"
+                  className="upload-button"
+                >
+                  <Button
+                    variant="contained"
+                    component="span"
+                    style={{
+                      color: "white",
+                      backgroundColor: "#039be5",
+                      textTransform: "none",
+                    }}
+                  >
+                    Browse
+                  </Button>
+                </label>
+                <div className="upload-info">
+                  <p className="text-[#69717a]">
+                    {truncateFilename(selectedFileNameUpdate, 20) ??
+                      "No file selected."}
+                  </p>
+                </div>
+              </div>
+            </Grid>
+          </Grid>
+          <Divider>
+            <Chip label="Produce List" color="success" />
+          </Divider>
+          {selectedStore?.products.map((product, index) => {
+            return (
+              <>
+                <Grid
+                  container
+                  spacing={2}
+                  key={index}
+                  sx={{ marginBottom: "2rem" }}
+                >
+                  <Grid item xs={12}>
+                    <div className="flex items-center mb-2 mt-3">
+                      <IconButton
+                        onClick={() => addNewProduct()}
+                        style={{
+                          color: "#8BC34A",
+                          backgroundColor: "transparent",
+                        }}
+                      >
+                        <AddCircleOutlineIcon />
+                      </IconButton>
+                    </div>
+                  </Grid>
+                </Grid>
+              </>
+            );
+          })}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleUpdateDialogClose}>Cancel</Button>
+          <Button
+            onClick={handleUpdateStore}
+            variant="contained"
+            color="primary"
+          >
+            Update Store
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
