@@ -368,8 +368,6 @@ const Store = () => {
 
         if (isInCebu) {
           setLocateButtonClicked(true);
-          // setSelectedLocation(firstResult);
-          // SetLocationSearch(firstResult.formatted_address);
           setSelectedStore((prevStore) => ({
             ...prevStore,
             store_location: firstResult,
