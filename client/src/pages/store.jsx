@@ -244,14 +244,14 @@ const Store = () => {
       setValidationSnackbarOpen(true);
       return;
     }
-    // await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
-    //   userId: decryptedUserId,
-    //   storeId: selectedStore._id,
-    //   ...selectedStore,
-    // });
+    await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
+      userId: decryptedUserId,
+      storeId: selectedStore._id,
+      ...selectedStore,
+    });
 
-    // setLocateButtonClicked(false);
-    // setSuccessSnackbarOpenUpdate(true);
+    setLocateButtonClicked(false);
+    setSuccessSnackbarOpenUpdate(true);
   };
 
   const convertFileToBase64 = (file) => {
