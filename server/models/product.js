@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const historicalData = require("./historicalData");
 
 const productSchema = mongoose.Schema({
   product_name: {
@@ -15,6 +16,9 @@ const productSchema = mongoose.Schema({
   },
   product_image: {
     type: String,
+  },
+  historicalData: {
+    type: [historicalData.schema],
   },
 });
 
