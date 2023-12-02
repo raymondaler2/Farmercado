@@ -69,6 +69,7 @@ const Store = () => {
   const [locationSearch, SetLocationSearch] = useState("");
   const [validationError, setValidationError] = useState(null);
   const [selectedStore, setSelectedStore] = useState(null);
+  const [selectedStoreOld, setSelectedStoreOld] = useState(null);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState({
     geometry: {
@@ -187,6 +188,7 @@ const Store = () => {
   const handleUpdateClick = (store) => {
     fetchStoreData(store);
     setUpdateDialogOpen(true);
+    setSelectedStoreOld(store);
   };
 
   const handleUpdateDialogClose = () => {
@@ -194,13 +196,50 @@ const Store = () => {
     setUpdateDialogOpen(false);
   };
 
+  const validateStoreInfoUpdate = () => {
+    if (selectedStore?.store_location.formatted_address === "") {
+      return "Invalid Store location.";
+    }
+
+    if (
+      locateButtonClicked === false &&
+      selectedStore?.store_location.formatted_address !==
+        selectedStoreOld?.store_location.formatted_address
+    ) {
+      return "Invalid Store location.";
+    }
+
+    if (!selectedStore.store_name || !selectedStore.store_contact_number) {
+      return "Invalid store information.";
+    }
+
+    for (const product of selectedStore.products) {
+      if (
+        !product.product_name ||
+        !product.product_count ||
+        !product.product_price
+      ) {
+        return "Invalid product information.";
+      }
+    }
+
+    return "";
+  };
+
   const handleUpdateStore = async () => {
+    const error = validateStoreInfoUpdate();
+    if (!!error) {
+      setValidationError(error);
+      setValidationSnackbarOpen(true);
+      return;
+    }
     await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
       userId: decryptedUserId,
       storeId: selectedStore._id,
       ...selectedStore,
     });
 
+    setLocateButtonClicked(false);
     setSuccessSnackbarOpenUpdate(true);
   };
 
@@ -317,22 +356,18 @@ const Store = () => {
         });
 
         if (isInCebu) {
-          // setLocateButtonClicked(true);
+          setLocateButtonClicked(true);
           // setSelectedLocation(firstResult);
           // SetLocationSearch(firstResult.formatted_address);
-          // setNewStoreInfo((prevInfo) => ({
-          //   ...prevInfo,
-          //   store_location: firstResult,
-          // }));
           setSelectedStore((prevStore) => ({
             ...prevStore,
             store_location: firstResult,
           }));
         } else {
-          // setLocationErrorSnackbarOpen(true);
+          setLocationErrorSnackbarOpen(true);
         }
       } else {
-        // setNoResultsSnackbarOpen(true);
+        setNoResultsSnackbarOpen(true);
       }
     } catch (error) {
       console.error(
@@ -369,6 +404,7 @@ const Store = () => {
         },
       ],
     });
+    setLocateButtonClicked(false);
     SetLocationSearch("");
     setProfilePicture(null);
     setProductImages(Array(newStoreInfo.products.length).fill(null));
@@ -380,6 +416,7 @@ const Store = () => {
   };
 
   const handleNewStoreDialogCloseUpdate = (event, reason) => {
+    setLocateButtonClicked(false);
     setUpdateDialogOpen(false);
   };
 
