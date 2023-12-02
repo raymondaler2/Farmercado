@@ -41,6 +41,8 @@ const Store = () => {
   const [validationSnackbarOpen, setValidationSnackbarOpen] = useState(false);
   const [locateButtonClicked, setLocateButtonClicked] = useState(false);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
+  const [successSnackbarOpenUpdate, setSuccessSnackbarOpenUpdate] =
+    useState(false);
   const [errorSnackbarOpen, setErrorSnackbarOpen] = useState(false);
   const [selectedFileName, setSelectedFileName] = useState("No file selected.");
   const [selectedFileNameUpdate, setSelectedFileNameUpdate] =
@@ -67,7 +69,6 @@ const Store = () => {
   const [locationSearch, SetLocationSearch] = useState("");
   const [validationError, setValidationError] = useState(null);
   const [selectedStore, setSelectedStore] = useState(null);
-  console.log("%c Line:68 🌽 selectedStore", "color:#b03734", selectedStore);
   const [updateDialogOpen, setUpdateDialogOpen] = useState(false);
   const [selectedLocation, setSelectedLocation] = useState({
     geometry: {
@@ -97,9 +98,14 @@ const Store = () => {
   const [productImages, setProductImages] = useState(
     Array(newStoreInfo.products.length).fill(null)
   );
+  const [productImagesUpdate, setProductImagesUpdate] = useState(
+    Array(newStoreInfo.products.length).fill(null)
+  );
   const [productImageFileNames, setProductImageFileNames] = useState(
     Array(newStoreInfo.products.length).fill("No file selected.")
   );
+  const [productImageFileNamesUpdate, setProductImageFileNamesUpdate] =
+    useState(Array(newStoreInfo.products.length).fill("No file selected."));
 
   const handleProductImageChange = async (index, file) => {
     const fileName = file.name;
@@ -135,6 +141,37 @@ const Store = () => {
     }
   };
 
+  const handleProductImageChangeUpdate = async (index, file) => {
+    const fileName = file.name;
+
+    setProductImageFileNamesUpdate((prevFileNames) => {
+      const updatedFileNames = [...prevFileNames];
+      updatedFileNames[index] = fileName;
+      return updatedFileNames;
+    });
+
+    setProductImagesUpdate((prevImages) => {
+      const updatedImages = [...prevImages];
+      updatedImages[index] = URL.createObjectURL(file);
+      return updatedImages;
+    });
+
+    try {
+      const base64Image = await convertFileToBase64(file);
+
+      setSelectedStore((prevStore) => {
+        const updatedProducts = [...prevStore.products];
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          product_image: base64Image,
+        };
+        return { ...prevStore, products: updatedProducts };
+      });
+    } catch (error) {
+      console.error("Error converting file to base64 Update:", error.message);
+    }
+  };
+
   const handleValidationSnackbarClose = () => {
     setValidationSnackbarOpen(false);
   };
@@ -147,24 +184,24 @@ const Store = () => {
     setSelectedStore(result.data);
   };
 
-  // Function to handle opening the update dialog
   const handleUpdateClick = (store) => {
     fetchStoreData(store);
     setUpdateDialogOpen(true);
   };
 
-  // Function to handle closing the update dialog
   const handleUpdateDialogClose = () => {
     setSelectedStore(null);
     setUpdateDialogOpen(false);
   };
 
-  // Function to handle updating the store
-  const handleUpdateStore = () => {
-    // Perform the update logic here based on the values in the text fields
-    // You can log or send an update request to your backend
-    console.log("Updated store:", selectedStore);
-    handleUpdateDialogClose();
+  const handleUpdateStore = async () => {
+    await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
+      userId: decryptedUserId,
+      storeId: selectedStore._id,
+      ...selectedStore,
+    });
+
+    setSuccessSnackbarOpenUpdate(true);
   };
 
   const convertFileToBase64 = (file) => {
@@ -181,6 +218,22 @@ const Store = () => {
       ...prevInfo,
       products: [
         ...prevInfo.products,
+        {
+          product_name: "",
+          product_count: "",
+          product_price: "",
+          product_status: "Available",
+          product_image: "",
+        },
+      ],
+    }));
+  };
+
+  const addNewProductUpdate = () => {
+    setSelectedStore((prevStore) => ({
+      ...prevStore,
+      products: [
+        ...prevStore?.products,
         {
           product_name: "",
           product_count: "",
@@ -326,6 +379,10 @@ const Store = () => {
     setNewStoreDialogOpen(false);
   };
 
+  const handleNewStoreDialogCloseUpdate = (event, reason) => {
+    setUpdateDialogOpen(false);
+  };
+
   const handleNewStoreInfoChange = (field, value) => {
     if (field === "store_contact_number") {
       const isValidNumber = /^[0-9]*$/.test(value);
@@ -365,6 +422,33 @@ const Store = () => {
           ...prevInfo,
           products: updatedProducts,
         };
+      });
+    }
+  };
+
+  const handleNewProductChangeUpdate = (index, subField, value) => {
+    if (subField === "remove") {
+      removeProductUpdate(index);
+    } else {
+      if (subField === "product_count") {
+        const isValidNumber = /^[0-9]*$/.test(value);
+        if (!isValidNumber) {
+          return;
+        }
+      }
+      if (subField === "product_price") {
+        const isValidNumber = /^(\d+(\.\d*)?|\.\d*)?$/.test(value);
+        if (!isValidNumber) {
+          return;
+        }
+      }
+      setSelectedStore((prevStore) => {
+        const updatedProducts = [...prevStore.products];
+        updatedProducts[index] = {
+          ...updatedProducts[index],
+          [subField]: value,
+        };
+        return { ...prevStore, products: updatedProducts };
       });
     }
   };
@@ -463,10 +547,10 @@ const Store = () => {
 
     setSelectedFileNameUpdate(file.name);
     convertFileToBase64(file)
-      .then((base64String) => {
+      .then((base64StringUpdate) => {
         setSelectedStore((prevStore) => ({
           ...prevStore,
-          store_image: base64String,
+          store_image: base64StringUpdate,
         }));
       })
       .catch((error) => {
@@ -533,6 +617,13 @@ const Store = () => {
     setNewStoreInfo((prevInfo) => ({
       ...prevInfo,
       products: prevInfo.products.filter((_, i) => i !== index),
+    }));
+  };
+
+  const removeProductUpdate = (index) => {
+    setSelectedStore((prevStore) => ({
+      ...prevStore,
+      products: prevStore.products.filter((_, i) => i !== index),
     }));
   };
 
@@ -756,6 +847,13 @@ const Store = () => {
                         mapRef.current = map;
                         setMapLoaded(true);
                       }
+                    }}
+                    options={{
+                      mapTypeId: "hybrid",
+                      streetViewControl: false,
+                      fullscreenControl: false,
+                      mapTypeControl: false,
+                      tilt: 0,
                     }}
                   >
                     <MarkerF
@@ -1217,6 +1315,13 @@ const Store = () => {
                         setMapLoaded(true);
                       }
                     }}
+                    options={{
+                      mapTypeId: "hybrid",
+                      streetViewControl: false,
+                      fullscreenControl: false,
+                      mapTypeControl: false,
+                      tilt: 0,
+                    }}
                   >
                     <MarkerF
                       position={{
@@ -1311,8 +1416,9 @@ const Store = () => {
               <div className="flex justify-center items-center">
                 <img
                   src={
-                    base64ToImageUrl(selectedStore?.store_image) ??
-                    default_avatar
+                    selectedStore?.store_image !== ""
+                      ? base64ToImageUrl(selectedStore?.store_image)
+                      : default_avatar
                   }
                   alt="Profile"
                   style={{
@@ -1328,7 +1434,9 @@ const Store = () => {
                 <input
                   type="file"
                   accept="image/*"
-                  onChange={(e) => handleImageChangeUpdate(e.target.files[0])}
+                  onChange={(e) => {
+                    handleImageChangeUpdate(e.target.files[0]);
+                  }}
                   style={{ display: "none" }}
                   id="profile-picture-upload"
                 />
@@ -1372,7 +1480,7 @@ const Store = () => {
                   <Grid item xs={12}>
                     <div className="flex items-center mb-2 mt-3">
                       <IconButton
-                        onClick={() => addNewProduct()}
+                        onClick={() => addNewProductUpdate()}
                         style={{
                           color: "#8BC34A",
                           backgroundColor: "transparent",
@@ -1380,24 +1488,195 @@ const Store = () => {
                       >
                         <AddCircleOutlineIcon />
                       </IconButton>
+                      {selectedStore?.products.length > 1 && (
+                        <IconButton
+                          onClick={() =>
+                            handleNewProductChangeUpdate(index, "remove", null)
+                          }
+                          style={{
+                            color: "#FF5722",
+                            backgroundColor: "transparent",
+                          }}
+                        >
+                          <RemoveCircleOutlineIcon />
+                        </IconButton>
+                      )}
+                    </div>
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      label={`Name`}
+                      value={product?.product_name}
+                      onChange={(e) =>
+                        handleNewProductChangeUpdate(
+                          index,
+                          "product_name",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      label={`Count`}
+                      value={product?.product_count}
+                      onChange={(e) =>
+                        handleNewProductChangeUpdate(
+                          index,
+                          "product_count",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <TextField
+                      required
+                      fullWidth
+                      label={`Price`}
+                      value={product?.product_price}
+                      onChange={(e) =>
+                        handleNewProductChangeUpdate(
+                          index,
+                          "product_price",
+                          e.target.value
+                        )
+                      }
+                    />
+                  </Grid>
+                  <Grid item xs={6}>
+                    <FormControl fullWidth>
+                      <InputLabel id="select-label">Status</InputLabel>
+                      <Select
+                        labelId="select-label"
+                        label="Status"
+                        value={product?.product_status}
+                        onChange={(e) =>
+                          handleNewProductChangeUpdate(
+                            index,
+                            "product_status",
+                            e.target.value
+                          )
+                        }
+                      >
+                        <MenuItem value="Available">Available</MenuItem>
+                        <MenuItem value="Out of Stock">Out of Stock</MenuItem>
+                      </Select>
+                    </FormControl>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <div className="flex justify-center items-center">
+                      <img
+                        src={
+                          productImagesUpdate[index] ??
+                          (product?.product_image !== ""
+                            ? base64ToImageUrl(product?.product_image)
+                            : default_avatar)
+                        }
+                        alt={`Product ${index + 1}`}
+                        style={{
+                          width: "40%",
+                          marginTop: "10px",
+                        }}
+                      />
+                    </div>
+                  </Grid>
+                  <Grid item xs={12}>
+                    <div className="upload-container-store mb-5">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) =>
+                          handleProductImageChangeUpdate(
+                            index,
+                            e.target.files[0]
+                          )
+                        }
+                        style={{ display: "none" }}
+                        id={`product-image-upload-${index}`}
+                      />
+                      <label
+                        htmlFor={`product-image-upload-${index}`}
+                        className="upload-button"
+                      >
+                        <Button
+                          variant="contained"
+                          component="span"
+                          style={{
+                            color: "white",
+                            backgroundColor: "#039be5",
+                            textTransform: "none",
+                          }}
+                        >
+                          Browse
+                        </Button>
+                      </label>
+                      <div className="upload-info">
+                        <p className="text-[#69717a]">
+                          {truncateFilename(
+                            productImageFileNamesUpdate[index] || "",
+                            20
+                          ) || "No file selected."}
+                        </p>
+                      </div>
                     </div>
                   </Grid>
                 </Grid>
+                <Divider></Divider>
               </>
             );
           })}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleUpdateDialogClose}>Cancel</Button>
           <Button
-            onClick={handleUpdateStore}
             variant="contained"
-            color="primary"
+            color="error"
+            onClick={handleNewStoreDialogCloseUpdate}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleUpdateStore}
           >
             Update Store
           </Button>
         </DialogActions>
       </Dialog>
+      <Snackbar
+        open={successSnackbarOpenUpdate}
+        autoHideDuration={1000}
+        onClose={(event, reason) => {
+          if (reason === "clickaway") {
+            return;
+          }
+          setSuccessSnackbarOpenUpdate(false);
+          handleUpdateDialogClose();
+          window.location.reload();
+        }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{ marginTop: "5rem" }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={(event, reason) => {
+            if (reason === "clickaway") {
+              return;
+            }
+            setSuccessSnackbarOpenUpdate(false);
+            window.location.reload();
+          }}
+          severity="success"
+        >
+          Store Updated Successfully
+        </MuiAlert>
+      </Snackbar>
     </div>
   );
 };

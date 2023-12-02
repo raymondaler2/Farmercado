@@ -203,6 +203,7 @@ const update_store_of_user = asyncHandler(async (req, res) => {
       store_contact_number,
       store_status,
       store_location,
+      store_image,
       products,
     } = req.body;
 
@@ -235,6 +236,7 @@ const update_store_of_user = asyncHandler(async (req, res) => {
     if (store_contact_number) store.store_contact_number = store_contact_number;
     if (store_status) store.store_status = store_status;
     if (store_location) store.store_location = store_location;
+    if (store_image) store.store_image = store_image;
 
     if (products && Array.isArray(products)) {
       products.forEach((productInfo) => {
