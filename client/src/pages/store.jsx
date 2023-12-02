@@ -216,14 +216,22 @@ const Store = () => {
       return "Invalid store information.";
     }
 
+    const productNames = new Set();
+
     for (const product of selectedStore.products) {
       if (
         !product.product_name ||
         !product.product_count ||
         !product.product_price
       ) {
-        return "Invalid product information.";
+        return "Invalid produce information.";
       }
+
+      if (productNames.has(product.product_name)) {
+        return "Duplicate produce";
+      }
+
+      productNames.add(product.product_name);
     }
 
     return "";
@@ -236,14 +244,14 @@ const Store = () => {
       setValidationSnackbarOpen(true);
       return;
     }
-    await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
-      userId: decryptedUserId,
-      storeId: selectedStore._id,
-      ...selectedStore,
-    });
+    // await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
+    //   userId: decryptedUserId,
+    //   storeId: selectedStore._id,
+    //   ...selectedStore,
+    // });
 
-    setLocateButtonClicked(false);
-    setSuccessSnackbarOpenUpdate(true);
+    // setLocateButtonClicked(false);
+    // setSuccessSnackbarOpenUpdate(true);
   };
 
   const convertFileToBase64 = (file) => {
@@ -506,14 +514,22 @@ const Store = () => {
       return "Invalid store information.";
     }
 
+    const productNames = new Set();
+
     for (const product of newStoreInfo.products) {
       if (
         !product.product_name ||
         !product.product_count ||
         !product.product_price
       ) {
-        return "Invalid product information.";
+        return "Invalid produce information.";
       }
+
+      if (productNames.has(product.product_name)) {
+        return "Duplicate produce";
+      }
+
+      productNames.add(product.product_name);
     }
 
     return "";
