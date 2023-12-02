@@ -1050,19 +1050,38 @@ const Store = () => {
                     </div>
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField
-                      required
-                      fullWidth
-                      label={`Name`}
-                      value={product?.product_name}
-                      onChange={(e) =>
-                        handleNewProductChange(
-                          index,
-                          "product_name",
-                          e.target.value
-                        )
-                      }
-                    />
+                    <FormControl fullWidth required>
+                      <InputLabel htmlFor="product-name">Name</InputLabel>
+                      <Select
+                        label="Name"
+                        id="product-name"
+                        value={product?.product_name}
+                        onChange={(e) =>
+                          handleNewProductChange(
+                            index,
+                            "product_name",
+                            e.target.value
+                          )
+                        }
+                      >
+                        <MenuItem value={"Ampalaya"}>Ampalaya</MenuItem>
+                        <MenuItem value={"Beans"}>Beans</MenuItem>
+                        <MenuItem value={"Bell pepper"}>Bell pepper</MenuItem>
+                        <MenuItem value={"Cabbage"}>Cabbage</MenuItem>
+                        <MenuItem value={"Carrots"}>Carrots</MenuItem>
+                        <MenuItem value={"Chili (espada)"}>
+                          Chili (espada)
+                        </MenuItem>
+                        <MenuItem value={"Eggplant"}>Eggplant</MenuItem>
+                        <MenuItem value={"Gabi"}>Gabi</MenuItem>
+                        <MenuItem value={"Onion Leeks"}>Onion Leeks</MenuItem>
+                        <MenuItem value={"Pechay"}>Pechay</MenuItem>
+                        <MenuItem value={"Sayote"}>Sayote</MenuItem>
+                        <MenuItem value={"Squash"}>Squash</MenuItem>
+                        <MenuItem value={"Sweet Potato"}>Sweet Potato</MenuItem>
+                        <MenuItem value={"Tomato"}>Tomato</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
@@ -1541,19 +1560,38 @@ const Store = () => {
                     </div>
                   </Grid>
                   <Grid item xs={6}>
-                    <TextField
-                      required
-                      fullWidth
-                      label={`Name`}
-                      value={product?.product_name}
-                      onChange={(e) =>
-                        handleNewProductChangeUpdate(
-                          index,
-                          "product_name",
-                          e.target.value
-                        )
-                      }
-                    />
+                    <FormControl fullWidth required>
+                      <InputLabel htmlFor="product-name">Name</InputLabel>
+                      <Select
+                        label="Name"
+                        id="product-name"
+                        value={product?.product_name}
+                        onChange={(e) =>
+                          handleNewProductChangeUpdate(
+                            index,
+                            "product_name",
+                            e.target.value
+                          )
+                        }
+                      >
+                        <MenuItem value={"Ampalaya"}>Ampalaya</MenuItem>
+                        <MenuItem value={"Beans"}>Beans</MenuItem>
+                        <MenuItem value={"Bell pepper"}>Bell pepper</MenuItem>
+                        <MenuItem value={"Cabbage"}>Cabbage</MenuItem>
+                        <MenuItem value={"Carrots"}>Carrots</MenuItem>
+                        <MenuItem value={"Chili (espada)"}>
+                          Chili (espada)
+                        </MenuItem>
+                        <MenuItem value={"Eggplant"}>Eggplant</MenuItem>
+                        <MenuItem value={"Gabi"}>Gabi</MenuItem>
+                        <MenuItem value={"Onion Leeks"}>Onion Leeks</MenuItem>
+                        <MenuItem value={"Pechay"}>Pechay</MenuItem>
+                        <MenuItem value={"Sayote"}>Sayote</MenuItem>
+                        <MenuItem value={"Squash"}>Squash</MenuItem>
+                        <MenuItem value={"Sweet Potato"}>Sweet Potato</MenuItem>
+                        <MenuItem value={"Tomato"}>Tomato</MenuItem>
+                      </Select>
+                    </FormControl>
                   </Grid>
                   <Grid item xs={6}>
                     <TextField
