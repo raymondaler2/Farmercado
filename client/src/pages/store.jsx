@@ -36,8 +36,10 @@ import { GoogleMap, MarkerF } from "@react-google-maps/api";
 import default_avatar from "./../assets/default_avatar.jpg";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
+import Prices from "./prices.jsx";
 
 const Store = () => {
+  const [pricesOpen, setPricesOpen] = useState(false);
   const [validationSnackbarOpen, setValidationSnackbarOpen] = useState(false);
   const [locateButtonClicked, setLocateButtonClicked] = useState(false);
   const [successSnackbarOpen, setSuccessSnackbarOpen] = useState(false);
@@ -192,6 +194,7 @@ const Store = () => {
   };
 
   const handleUpdateDialogClose = () => {
+    if (reason && reason == "backdropClick") return;
     setSelectedStore(null);
     setUpdateDialogOpen(false);
   };
@@ -851,6 +854,26 @@ const Store = () => {
         fullWidth={true}
         maxWidth={"md"}
         PaperProps={{ style: { padding: "20px" } }}
+        open={pricesOpen}
+        onClose={() => setPricesOpen(false)}
+      >
+        <DialogContent>
+          <Prices />
+        </DialogContent>
+        <DialogActions>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={() => setPricesOpen(false)}
+          >
+            Close
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
+        fullWidth={true}
+        maxWidth={"md"}
+        PaperProps={{ style: { padding: "20px" } }}
         open={newStoreDialogOpen}
         onClose={handleNewStoreDialogClose}
       >
@@ -1195,6 +1218,14 @@ const Store = () => {
             onClick={handleNewStoreDialogClose}
           >
             Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setPricesOpen(true);
+            }}
+          >
+            Check Prices
           </Button>
           <Button
             variant="contained"
@@ -1713,6 +1744,14 @@ const Store = () => {
             onClick={handleNewStoreDialogCloseUpdate}
           >
             Cancel
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              setPricesOpen(true);
+            }}
+          >
+            Check Prices
           </Button>
           <Button
             variant="contained"

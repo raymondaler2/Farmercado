@@ -66,7 +66,6 @@ const NavBar = () => {
                 <NavLink to="/" exact>
                   Home
                 </NavLink>
-                <NavLink to="/prices">Prices</NavLink>
                 <NavLink to="/store">Store</NavLink>
                 <NavLink to="/orders">Orders</NavLink>
 
