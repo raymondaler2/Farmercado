@@ -2,6 +2,7 @@ require("dotenv").config();
 const express = require("express");
 const mongoose = require("mongoose");
 const userRoute = require("./view/user");
+const historicalRoute = require("./view/historical");
 const cors = require("cors");
 
 const app = express();
@@ -20,6 +21,7 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/user", userRoute);
+app.use("/api/historical", historicalRoute);
 
 mongoose.set("strictQuery", false);
 

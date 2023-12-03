@@ -1,4 +1,3 @@
-const authenthicate_token = require("./../middleware/authenthicate_token.jsx");
 const express = require("express");
 
 const {

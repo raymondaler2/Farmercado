@@ -194,7 +194,6 @@ const Store = () => {
   };
 
   const handleUpdateDialogClose = () => {
-    if (reason && reason == "backdropClick") return;
     setSelectedStore(null);
     setUpdateDialogOpen(false);
   };
@@ -244,14 +243,34 @@ const Store = () => {
       setValidationSnackbarOpen(true);
       return;
     }
-    await axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
-      userId: decryptedUserId,
-      storeId: selectedStore._id,
-      ...selectedStore,
-    });
 
-    setLocateButtonClicked(false);
-    setSuccessSnackbarOpenUpdate(true);
+    try {
+      const [update_store_of_user, add_product_to_historical] =
+        await Promise.all([
+          axios.put(`http://localhost:5000/api/user/update_store_of_user`, {
+            userId: decryptedUserId,
+            storeId: selectedStore._id,
+            ...selectedStore,
+          }),
+          axios.post(
+            `http://localhost:5000/api/historical/add_product_to_historical`,
+            selectedStore?.products
+          ),
+        ]);
+
+      if (
+        update_store_of_user.status === 200 &&
+        add_product_to_historical.status === 200
+      ) {
+        setLocateButtonClicked(false);
+        setSuccessSnackbarOpenUpdate(true);
+        handleNewStoreDialogCloseUpdate().then(() => {
+          window.location.reload();
+        });
+      }
+    } catch (error) {
+      console.error("Error updating store:", error.message);
+    }
   };
 
   const convertFileToBase64 = (file) => {
@@ -542,26 +561,33 @@ const Store = () => {
     }
 
     try {
-      await axios.post(`http://localhost:5000/api/user/add_store_to_user`, {
-        userId: decryptedUserId,
-        storeInfo: {
-          store_name: newStoreInfo?.store_name ?? "",
-          store_description: newStoreInfo?.store_description ?? "",
-          store_contact_number: newStoreInfo?.store_contact_number ?? "",
-          store_status: newStoreInfo?.store_status ?? "",
-          store_location: newStoreInfo?.store_location ?? "",
-          store_image: newStoreInfo?.store_image ?? "",
-        },
-        productsInfo: newStoreInfo?.products ?? [],
-      });
+      const [addStoreResult, addHistoricalResult] = await Promise.all([
+        axios.post(`http://localhost:5000/api/user/add_store_to_user`, {
+          userId: decryptedUserId,
+          storeInfo: {
+            store_name: newStoreInfo?.store_name ?? "",
+            store_description: newStoreInfo?.store_description ?? "",
+            store_contact_number: newStoreInfo?.store_contact_number ?? "",
+            store_status: newStoreInfo?.store_status ?? "",
+            store_location: newStoreInfo?.store_location ?? "",
+            store_image: newStoreInfo?.store_image ?? "",
+          },
+          productsInfo: newStoreInfo?.products ?? [],
+        }),
+        axios.post(
+          `http://localhost:5000/api/historical/add_product_to_historical`,
+          newStoreInfo?.products
+        ),
+      ]);
 
-      setSuccessSnackbarOpen(true);
+      if (addStoreResult.status === 200 && addHistoricalResult.status === 200) {
+        setSuccessSnackbarOpen(true);
+        handleNewStoreDialogClose();
+      }
     } catch (error) {
       console.error("Error creating store:", error.message);
       setErrorSnackbarOpen(true);
     }
-
-    handleNewStoreDialogClose();
   };
 
   const handleProductButtonClick = (store) => {
