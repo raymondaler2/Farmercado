@@ -1,5 +1,6 @@
 const Historical = require("../models/historical");
 const asyncHandler = require("express-async-handler");
+const linearRegression = require("linear-regression");
 
 const addProductToHistorical = async (productArray) => {
   try {
@@ -45,6 +46,48 @@ const addProductToHistorical = async (productArray) => {
   }
 };
 
+const forecast_prices = asyncHandler(async (req, res) => {
+  try {
+    const productsData = await Historical.find();
+
+    const forecastedPrices = [];
+
+    productsData.forEach((product) => {
+      const dates = product.product_data.map((entry) =>
+        new Date(entry.date).getTime()
+      );
+      const prices = product.product_data.map((entry) => entry.product_price);
+
+      if (dates.length >= 2) {
+        const result = linearRegression(
+          dates.map((date, index) => [date, prices[index]])
+        );
+
+        if (result && result.a !== undefined && result.b !== undefined) {
+          const currentDateTimestamp = new Date().getTime();
+          const forecastedPrice = result.a * currentDateTimestamp + result.b;
+
+          forecastedPrices.push({
+            product_name: product.product_name,
+            forecasted_price: forecastedPrice,
+          });
+        } else {
+          console.error(
+            "Linear regression result or coefficients are undefined:",
+            result
+          );
+        }
+      } else {
+        console.error("Insufficient data points for linear regression");
+      }
+    });
+
+    res.status(200).json(forecastedPrices);
+  } catch (error) {
+    res.status(500).json({ error: "forecast_prices ERROR" });
+  }
+});
+
 const add_product_to_historical = asyncHandler(async (req, res) => {
   try {
     const productArray = req.body;
@@ -58,6 +101,17 @@ const add_product_to_historical = asyncHandler(async (req, res) => {
   }
 });
 
+const get_all = asyncHandler(async (req, res) => {
+  try {
+    const data = await Historical.find();
+    res.status(200).json(data);
+  } catch (error) {
+    res.status(500).json({ error: "Get All Historical ERROR" });
+  }
+});
+
 module.exports = {
   add_product_to_historical,
+  forecast_prices,
+  get_all,
 };
