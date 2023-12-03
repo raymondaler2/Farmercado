@@ -5,9 +5,7 @@ import axios from "axios";
 const Prices = () => {
   const [chartData, setChartData] = useState([]);
   const [productData, setProductData] = useState([]);
-  console.log("%c Line:8 🍏 productData", "color:#2eafb0", productData);
   const [forecastPrices, setForecastPrices] = useState([]);
-  console.log("%c Line:9 🍰 forecastPrices", "color:#ea7e5c", forecastPrices);
 
   const fetchData = async () => {
     try {
@@ -30,7 +28,10 @@ const Prices = () => {
   useEffect(() => {
     // Extract unique product names
     const productNames = Array.from(
-      new Set(productData.flatMap((product) => product.product_name))
+      new Set([
+        ...productData.flatMap((product) => product.product_name),
+        ...forecastPrices.map((forecast) => forecast.product_name),
+      ])
     );
 
     // Initialize chartData with header row
@@ -59,8 +60,18 @@ const Prices = () => {
       formattedChartData.push(dateRow);
     });
 
+    // Add forecasted prices for today
+    const todayRow = [new Date()];
+    productNames.forEach((productName) => {
+      const forecastPrice =
+        forecastPrices.find((forecast) => forecast.product_name === productName)
+          ?.forecasted_price || 0;
+      todayRow.push(forecastPrice);
+    });
+    formattedChartData.push(todayRow);
+
     setChartData(formattedChartData);
-  }, [productData]);
+  }, [productData, forecastPrices]);
 
   return (
     <>
