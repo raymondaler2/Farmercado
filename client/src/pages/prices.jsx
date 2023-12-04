@@ -14,6 +14,7 @@ const Prices = () => {
   const [selectedProduct, setSelectedProduct] = useState("Ampalaya");
   const [filteredChartData, setFilteredChartData] = useState(chartData);
   const [selectedProductForecast, setSelectedProductForecast] = useState(0);
+  const [selectedTimeInterval, setSelectedTimeInterval] = useState("Monthly");
 
   const fetchData = async () => {
     try {
@@ -109,6 +110,11 @@ const Prices = () => {
     updateForecastedPrice(selectedProduct);
   }, [selectedProduct, chartData]);
 
+  const handleTimeIntervalChange = (event) => {
+    const selectedInterval = event.target.value;
+    setSelectedTimeInterval(selectedInterval);
+  };
+
   return (
     <>
       <div>
@@ -119,6 +125,21 @@ const Prices = () => {
           alignItems="center"
         >
           <Grid item xs={6}>
+            <FormControl>
+              <InputLabel id="time-interval-select-label">Interval</InputLabel>
+              <Select
+                variant="filled"
+                labelId="time-interval-select-label"
+                id="time-interval-select"
+                value={selectedTimeInterval}
+                onChange={handleTimeIntervalChange}
+                className="mr-2"
+              >
+                <MenuItem value="Weekly">Weekly</MenuItem>
+                <MenuItem value="Monthly">Monthly</MenuItem>
+                <MenuItem value="Yearly">Yearly</MenuItem>
+              </Select>
+            </FormControl>
             <FormControl>
               <InputLabel id="product-select-label">Product</InputLabel>
               <Select

@@ -1129,7 +1129,7 @@ const Store = () => {
                       >
                         <MenuItem value={"Ampalaya"}>Ampalaya</MenuItem>
                         <MenuItem value={"Beans"}>Beans</MenuItem>
-                        <MenuItem value={"Bell pepper"}>Bell pepper</MenuItem>
+                        <MenuItem value={"Bell Pepper"}>Bell Pepper</MenuItem>
                         <MenuItem value={"Cabbage"}>Cabbage</MenuItem>
                         <MenuItem value={"Carrots"}>Carrots</MenuItem>
                         <MenuItem value={"Chili (espada)"}>
@@ -1647,7 +1647,7 @@ const Store = () => {
                       >
                         <MenuItem value={"Ampalaya"}>Ampalaya</MenuItem>
                         <MenuItem value={"Beans"}>Beans</MenuItem>
-                        <MenuItem value={"Bell pepper"}>Bell pepper</MenuItem>
+                        <MenuItem value={"Bell Pepper"}>Bell Pepper</MenuItem>
                         <MenuItem value={"Cabbage"}>Cabbage</MenuItem>
                         <MenuItem value={"Carrots"}>Carrots</MenuItem>
                         <MenuItem value={"Chili (espada)"}>
