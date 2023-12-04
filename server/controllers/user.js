@@ -342,7 +342,24 @@ const delete_store = asyncHandler(async (req, res) => {
   }
 });
 
+const get_all_stores = asyncHandler(async (req, res) => {
+  try {
+    const users = await User.find();
+
+    const allStores = users.reduce((acc, user) => {
+      const userStores = user.stores || [];
+      return [...acc, ...userStores];
+    }, []);
+
+    res.status(200).json(allStores);
+  } catch (error) {
+    console.error("Get All Stores ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = {
+  get_all_stores,
   delete_store,
   get_store,
   get_user_stores,

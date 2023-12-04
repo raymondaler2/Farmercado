@@ -13,9 +13,11 @@ const {
   get_user_stores,
   get_store,
   delete_store,
+  get_all_stores,
 } = require("./../controllers/user");
 
 const router = express.Router();
+router.get("/stores", get_all_stores);
 router.delete("/:userId/stores/:storeId", delete_store);
 router.get("/:userId/stores/:storeId", get_store);
 router.get("/:id/stores", get_user_stores);
