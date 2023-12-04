@@ -11,8 +11,8 @@ const Prices = () => {
   const [chartData, setChartData] = useState([]);
   const [productData, setProductData] = useState([]);
   const [forecastPrices, setForecastPrices] = useState([]);
-  const [selectedProduct, setSelectedProduct] = useState("All");
-  const [filteredChartData, setFilteredChartData] = useState([]);
+  const [selectedProduct, setSelectedProduct] = useState("Ampalaya");
+  const [filteredChartData, setFilteredChartData] = useState(chartData);
   const [selectedProductForecast, setSelectedProductForecast] = useState(0);
 
   const fetchData = async () => {
@@ -93,23 +93,19 @@ const Prices = () => {
   };
 
   useEffect(() => {
-    if (selectedProduct === "All") {
-      setFilteredChartData(chartData);
-    } else {
-      const productIndex = chartData[0].indexOf(selectedProduct);
+    const productIndex = chartData[0]?.indexOf(selectedProduct);
 
-      const filteredData = (array, index) => {
-        if (index >= 0 && index < array[0].length) {
-          return array.map((row) => [row[0], row[index]]);
-        } else {
-          console.error("Index out of bounds");
-          return null;
-        }
-      };
+    const filteredData = (array, index) => {
+      if (index >= 0 && index < array[0].length) {
+        return array.map((row) => [row[0], row[index]]);
+      } else {
+        console.error("Index out of bounds");
+        return null;
+      }
+    };
 
-      const resultArray = filteredData(chartData, productIndex);
-      setFilteredChartData(resultArray);
-    }
+    const resultArray = filteredData(chartData, productIndex);
+    setFilteredChartData(resultArray);
     updateForecastedPrice(selectedProduct);
   }, [selectedProduct, chartData]);
 
@@ -133,7 +129,6 @@ const Prices = () => {
                 onChange={handleProductChange}
                 className="mr-2"
               >
-                <MenuItem value="All">All</MenuItem>
                 {productData.map((product) => (
                   <MenuItem key={product._id} value={product.product_name}>
                     {product.product_name}
@@ -146,7 +141,6 @@ const Prices = () => {
               id="forecast-price"
               variant="filled"
               value={selectedProductForecast}
-              disabled
             />
           </Grid>
         </Grid>
@@ -157,7 +151,7 @@ const Prices = () => {
           height={"70vh"}
           chartType="LineChart"
           loader={<div>Loading Chart</div>}
-          data={selectedProduct === "All" ? chartData : filteredChartData}
+          data={filteredChartData}
           options={{
             title: "Prices Over Time",
             animation: {
@@ -172,6 +166,7 @@ const Prices = () => {
             vAxis: {
               title: "Price",
             },
+            legend: "none",
           }}
         />
       </div>
