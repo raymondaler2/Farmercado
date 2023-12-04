@@ -36,8 +36,16 @@ const Home = () => {
   };
 
   const FetchMarkers = async () => {
-    const result = await axios.get(`http://localhost:5000/api/user/stores`);
-    setMarkers(result.data);
+    try {
+      const result = await axios.get(`http://localhost:5000/api/user/stores`);
+      const filteredMarkers = result.data.filter(
+        (store) => store.store_status !== "Close"
+      );
+
+      setMarkers(filteredMarkers);
+    } catch (error) {
+      console.error("Error fetching markers:", error);
+    }
   };
 
   const handleMarkerClick = (marker) => {
