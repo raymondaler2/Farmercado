@@ -59,7 +59,7 @@ const NavBar = () => {
           </Link>
         </div>
 
-        <div className="flex items-center space-x-6">
+        <div className="flex items-center space-x-4">
           {isTokenAvailable ? (
             decryptedUserType === "seller" ? (
               <>

@@ -3,7 +3,12 @@ import NavBar from "./../components/NavBar.jsx";
 import CryptoJS from "crypto-js";
 import axios from "axios";
 import { useState, useEffect, useRef } from "react";
-import { GoogleMap, MarkerF } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  MarkerF,
+  DirectionsService,
+  DirectionsRenderer,
+} from "@react-google-maps/api";
 import {
   Drawer,
   List,
@@ -11,11 +16,20 @@ import {
   ListItemText,
   Grid,
   IconButton,
+  Stack,
+  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import default_avatar from "./../assets/default_avatar.jpg";
+import ChatIcon from "@mui/icons-material/Chat";
+import PhoneIcon from "@mui/icons-material/Phone";
+import DirectionsIcon from "@mui/icons-material/Directions";
 
 const Home = () => {
+  const [zoomLevel, setZoomLevel] = useState(9);
+  const [directionsText, setDirectionsText] = useState([]);
+  const [directionsResponse, setDirectionsResponse] = useState(null);
+  const [showDirections, setShowDirections] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [mapLoaded, setMapLoaded] = useState(false);
   const mapRef = useRef(null);
@@ -23,7 +37,8 @@ const Home = () => {
     "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z";
   const [markers, setMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
-  console.log("%c Line:17 🍡 selectedMarker", "color:#7f2b82", selectedMarker);
+  const [openDrawer, setOpenDrawer] = useState(false);
+  const [openDrawerDirections, setOpenDrawerDirections] = useState(false);
   const token = localStorage.getItem("token") ?? "";
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
   const decryptedtoken = CryptoJS.AES.decrypt(token, jwtSecret).toString(
@@ -59,11 +74,19 @@ const Home = () => {
   };
 
   const handleMarkerClick = (marker) => {
+    setOpenDrawer(true);
     setSelectedMarker(marker);
   };
 
   const handleDrawerClose = () => {
-    setSelectedMarker(null);
+    setOpenDrawer(false);
+  };
+
+  const handleDrawerCloseDirections = () => {
+    setZoomLevel(9);
+    setOpenDrawerDirections(false);
+    setShowDirections(false);
+    setDirectionsResponse(null);
   };
 
   const getCurrentLocation = () => {
@@ -79,6 +102,59 @@ const Home = () => {
         console.error("Error getting current location:", error.message);
       }
     );
+  };
+
+  const handleCall = (Number) => {
+    const telURI = `tel:${Number}`;
+    window.open(telURI, "_blank");
+  };
+
+  const handleDirectionsClick = async (data) => {
+    try {
+      const { lat: userLat, lng: userLng } = userLocation ?? {};
+      const { lat: storeLat, lng: storeLng } =
+        data.store_location.geometry.location;
+      const directionsService = new window.google.maps.DirectionsService();
+
+      const response = await axios.post(
+        `http://localhost:5000/api/historical/get_directions`,
+        {
+          userLat,
+          userLng,
+          storeLat,
+          storeLng,
+        }
+      );
+
+      directionsService.route(
+        {
+          origin: new window.google.maps.LatLng(userLat, userLng),
+          destination: new window.google.maps.LatLng(storeLat, storeLng),
+          travelMode: window.google.maps.TravelMode.DRIVING,
+        },
+        (result, status) => {
+          if (status === window.google.maps.DirectionsStatus.OK) {
+            const directions = result.routes[0].legs[0].steps.map(
+              (step) => step.instructions
+            );
+            setDirectionsText(directions);
+          } else {
+            console.error("Error fetching directions:", status);
+          }
+        }
+      );
+      const directionsResult = response.data;
+
+      setDirectionsResponse(directionsResult);
+      setShowDirections(true);
+    } catch (error) {
+      console.error("Error fetching directions:", error);
+    }
+  };
+
+  const handleChatClick = () => {
+    // Add your logic for handling Chat click
+    console.log("Chat button clicked");
   };
 
   useEffect(() => {
@@ -120,6 +196,12 @@ const Home = () => {
   }, [mapLoaded]);
 
   useEffect(() => {
+    if (showDirections) {
+      setOpenDrawerDirections(true);
+    }
+  }, [showDirections]);
+
+  useEffect(() => {
     getCurrentLocation();
     FetchMarkers();
   }, []);
@@ -130,8 +212,15 @@ const Home = () => {
       <div style={{ height: "90vh", width: "100%", marginTop: "95px" }}>
         <GoogleMap
           mapContainerStyle={{ height: "100%", width: "100%" }}
-          zoom={9}
-          center={{ lat: 10.3157, lng: 123.8854 }}
+          zoom={zoomLevel}
+          center={
+            showDirections
+              ? undefined
+              : {
+                  lat: 10.3157,
+                  lng: 123.8854,
+                }
+          }
           onLoad={(map) => {
             if (!mapRef.current) {
               mapRef.current = map;
@@ -171,12 +260,40 @@ const Home = () => {
               onClick={() => handleMarkerClick(marker)}
             />
           ))}
+          {showDirections && (
+            <DirectionsService
+              options={{
+                origin: new window.google.maps.LatLng(
+                  userLocation?.lat,
+                  userLocation?.lng
+                ),
+                destination: new window.google.maps.LatLng(
+                  selectedMarker?.store_location.geometry.location.lat,
+                  selectedMarker?.store_location.geometry.location.lng
+                ),
+                travelMode: window.google.maps.TravelMode.DRIVING,
+              }}
+              callback={(result, status) => {
+                if (status === window.google.maps.DirectionsStatus.OK) {
+                  setDirectionsResponse(result);
+                  setShowDirections(false);
+                  handleDrawerClose();
+                } else {
+                  console.error("Directions request failed due to ", status);
+                }
+              }}
+            />
+          )}
+          {directionsResponse && (
+            <DirectionsRenderer
+              options={{
+                directions: directionsResponse,
+                suppressMarkers: true,
+              }}
+            />
+          )}
         </GoogleMap>
-        <Drawer
-          anchor="bottom"
-          open={!!selectedMarker}
-          onClose={handleDrawerClose}
-        >
+        <Drawer anchor="bottom" open={openDrawer} onClose={handleDrawerClose}>
           <IconButton
             style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
             onClick={handleDrawerClose}
@@ -242,6 +359,37 @@ const Home = () => {
             <ListItem>
               <ListItemText>
                 <Grid container justifyContent="center" alignItems="center">
+                  <Stack
+                    direction="row"
+                    spacing={2}
+                    sx={{
+                      marginRight: "10px",
+                    }}
+                  >
+                    <IconButton
+                      color="success"
+                      onClick={() =>
+                        handleCall(selectedMarker?.store_contact_number)
+                      }
+                    >
+                      <PhoneIcon />
+                    </IconButton>
+                    <IconButton
+                      color="success"
+                      onClick={() => handleDirectionsClick(selectedMarker)}
+                    >
+                      <DirectionsIcon />
+                    </IconButton>
+                    <IconButton color="success" onClick={handleChatClick}>
+                      <ChatIcon />
+                    </IconButton>
+                  </Stack>
+                </Grid>
+              </ListItemText>
+            </ListItem>
+            <ListItem>
+              <ListItemText>
+                <Grid container justifyContent="center" alignItems="center">
                   <center>
                     <p className="text-xl">
                       {selectedMarker?.store_description || ""}
@@ -287,6 +435,30 @@ const Home = () => {
                     <p className="text-lg">{`Price: ₱ ${product.product_price}`}</p>
                   </div>
                 </Grid>
+              </ListItem>
+            ))}
+          </List>
+        </Drawer>
+        <Drawer
+          anchor="bottom"
+          open={openDrawerDirections}
+          onClose={handleDrawerCloseDirections}
+          PaperProps={{ style: { maxHeight: "200px" } }}
+        >
+          <IconButton
+            style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
+            onClick={handleDrawerCloseDirections}
+            color="error"
+          >
+            <CloseIcon />
+          </IconButton>
+          <List>
+            {directionsText.map((step, index) => (
+              <ListItem key={index}>
+                <Typography
+                  variant="body1"
+                  dangerouslySetInnerHTML={{ __html: step }}
+                />
               </ListItem>
             ))}
           </List>

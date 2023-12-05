@@ -1,6 +1,7 @@
 const Historical = require("../models/historical");
 const asyncHandler = require("express-async-handler");
 const linearRegression = require("linear-regression");
+const axios = require("axios");
 
 const addProductToHistorical = async (productArray) => {
   try {
@@ -110,7 +111,22 @@ const get_all = asyncHandler(async (req, res) => {
   }
 });
 
+const get_directions = asyncHandler(async (req, res) => {
+  const apiKey = process.env.VITE_GOOGLE_MAPS_API_KEY;
+  try {
+    const { userLat, userLng, storeLat, storeLng } = req.body;
+    const response = await axios.get(
+      `https://maps.googleapis.com/maps/api/directions/json?origin=${userLat},${userLng}&destination=${storeLat},${storeLng}&key=${apiKey}`
+    );
+    res.status(200).json(response.data); // Send only the data property
+  } catch (error) {
+    console.error("Error fetching directions:", error);
+    res.status(500).json({ error: "Get Directions ERROR" });
+  }
+});
+
 module.exports = {
+  get_directions,
   add_product_to_historical,
   forecast_prices,
   get_all,
