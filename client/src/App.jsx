@@ -5,6 +5,7 @@ import NotFound from "./pages/notfound.jsx";
 import Register from "./pages/register.jsx";
 import Information from "./pages/Information.jsx";
 import Store from "./pages/store.jsx";
+import Orders from "./pages/orders.jsx";
 import { LoadScript } from "@react-google-maps/api";
 
 const MAP_LIBRARIES = ["places"];
@@ -21,6 +22,7 @@ const App = () => {
       >
         <Routes>
           <Route index element={<Home />} />
+          <Route path="/orders" element={<Orders />} />
           <Route path="/Store" element={<Store />} />
           <Route path="/Login" element={<Login />} />
           <Route path="/Information" element={<Information />} />

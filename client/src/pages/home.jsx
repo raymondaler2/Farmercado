@@ -25,8 +25,10 @@ import default_avatar from "./../assets/default_avatar.jpg";
 import ChatIcon from "@mui/icons-material/Chat";
 import PhoneIcon from "@mui/icons-material/Phone";
 import DirectionsIcon from "@mui/icons-material/Directions";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
+  const navigate = useNavigate();
   const [productQuantities, setProductQuantities] = useState({});
   const [zoomLevel, setZoomLevel] = useState(9);
   const [directionsText, setDirectionsText] = useState([]);
@@ -164,13 +166,7 @@ const Home = () => {
   };
 
   const handleChatClick = () => {
-    // Add your logic for handling Chat click
-    console.log(
-      "%c Line:31 🍩 productQuantities",
-      "color:#42b983",
-      productQuantities
-    );
-    console.log("Chat button clicked");
+    navigate("/Orders", { state: { productQuantities } });
   };
 
   useEffect(() => {
