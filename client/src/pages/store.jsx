@@ -1512,6 +1512,11 @@ const Store = () => {
                 label="Number"
                 value={selectedStore?.store_contact_number || ""}
                 onChange={(e) => {
+                  const isValidNumber = /^[0-9]*$/.test(e.target.value);
+                  if (!isValidNumber) {
+                    return;
+                  }
+
                   setSelectedStore((prevStore) => ({
                     ...prevStore,
                     store_contact_number: e.target.value,
@@ -1659,13 +1664,13 @@ const Store = () => {
                       fullWidth
                       label={`Count`}
                       value={product?.product_count}
-                      onChange={(e) =>
+                      onChange={(e) => {
                         handleNewProductChangeUpdate(
                           index,
                           "product_count",
                           e.target.value
-                        )
-                      }
+                        );
+                      }}
                     />
                   </Grid>
                   <Grid item xs={6}>

@@ -18,6 +18,7 @@ import {
   IconButton,
   Stack,
   Typography,
+  TextField,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import default_avatar from "./../assets/default_avatar.jpg";
@@ -26,6 +27,7 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import DirectionsIcon from "@mui/icons-material/Directions";
 
 const Home = () => {
+  const [productQuantities, setProductQuantities] = useState({});
   const [zoomLevel, setZoomLevel] = useState(9);
   const [directionsText, setDirectionsText] = useState([]);
   const [directionsResponse, setDirectionsResponse] = useState(null);
@@ -152,8 +154,22 @@ const Home = () => {
     }
   };
 
+  const handleTextFieldChange = (product_name, event) => {
+    const { value } = event.target;
+
+    setProductQuantities((prevQuantities) => ({
+      ...prevQuantities,
+      [product_name]: value,
+    }));
+  };
+
   const handleChatClick = () => {
     // Add your logic for handling Chat click
+    console.log(
+      "%c Line:31 🍩 productQuantities",
+      "color:#42b983",
+      productQuantities
+    );
     console.log("Chat button clicked");
   };
 
@@ -413,29 +429,52 @@ const Home = () => {
               </ListItemText>
             </ListItem>
             {selectedMarker?.products.map((product) => (
-              <ListItem key={product._id}>
-                <Grid
-                  container
-                  justifyContent="center"
-                  alignItems="center"
-                  className="mb-5 mr-14"
-                >
-                  <img
-                    src={
-                      !!product?.product_image
-                        ? `data:image/png;base64,${product?.product_image}`
-                        : default_avatar
-                    }
-                    alt="Profile"
-                    className="w-40 h-40 rounded-full"
-                  />
-                  <div className="flex flex-col ml-5">
-                    <p className="text-xl">{product.product_name}</p>
-                    <p className="text-lg">{`Count: ${product.product_count}`}</p>
-                    <p className="text-lg">{`Price: ₱ ${product.product_price}`}</p>
-                  </div>
-                </Grid>
-              </ListItem>
+              <div>
+                <ListItem key={product._id}>
+                  <Grid
+                    container
+                    justifyContent="center"
+                    alignItems="center"
+                    className="mb-5 mr-14"
+                  >
+                    <img
+                      src={
+                        !!product?.product_image
+                          ? `data:image/png;base64,${product?.product_image}`
+                          : default_avatar
+                      }
+                      alt="Profile"
+                      className="w-40 h-40 rounded-full"
+                    />
+                    <div className="flex flex-col ml-5">
+                      <p className="text-xl">{product.product_name}</p>
+                      <p className="text-lg">{`Count: ${product.product_count}`}</p>
+                      <p className="text-lg">{`Price: ₱ ${product.product_price}`}</p>
+                    </div>
+                  </Grid>
+                </ListItem>
+                <ListItem>
+                  <ListItemText>
+                    <Grid container justifyContent="center" alignItems="center">
+                      <TextField
+                        fullWidth
+                        label="Quantity"
+                        variant="filled"
+                        value={productQuantities[product.product_name] || ""}
+                        onChange={(event) => {
+                          const isValidNumber = /^[0-9]*$/.test(
+                            event.target.value
+                          );
+                          if (!isValidNumber) {
+                            return;
+                          }
+                          handleTextFieldChange(product.product_name, event);
+                        }}
+                      />
+                    </Grid>
+                  </ListItemText>
+                </ListItem>
+              </div>
             ))}
           </List>
         </Drawer>
