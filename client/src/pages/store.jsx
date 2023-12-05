@@ -1032,11 +1032,7 @@ const Store = () => {
                 <img
                   src={profilePicture ?? default_avatar}
                   alt="Profile"
-                  style={{
-                    width: "60%",
-                    borderRadius: "50%",
-                    marginTop: "10px",
-                  }}
+                  className="w-60 h-60 rounded-full mt-3"
                 />
               </div>
             </Grid>
@@ -1201,10 +1197,7 @@ const Store = () => {
                       <img
                         src={productImages[index] ?? default_avatar}
                         alt={`Product ${index + 1}`}
-                        style={{
-                          width: "40%",
-                          marginTop: "10px",
-                        }}
+                        className="w-40 h-40 rounded-full mt-3"
                       />
                     </div>
                   </Grid>
@@ -1265,14 +1258,14 @@ const Store = () => {
               setPricesOpen(true);
             }}
           >
-            Check Prices
+            Prices
           </Button>
           <Button
             variant="contained"
             color="success"
             onClick={handleCreateStore}
           >
-            Create Store
+            Create
           </Button>
         </DialogActions>
       </Dialog>
@@ -1548,11 +1541,7 @@ const Store = () => {
                       : default_avatar
                   }
                   alt="Profile"
-                  style={{
-                    width: "60%",
-                    borderRadius: "50%",
-                    marginTop: "10px",
-                  }}
+                  className="w-60 h-60 rounded-full mt-3"
                 />
               </div>
             </Grid>
@@ -1724,10 +1713,7 @@ const Store = () => {
                             : default_avatar)
                         }
                         alt={`Product ${index + 1}`}
-                        style={{
-                          width: "40%",
-                          marginTop: "10px",
-                        }}
+                        className="w-40 h-40 rounded-full mt-3"
                       />
                     </div>
                   </Grid>
@@ -1791,14 +1777,14 @@ const Store = () => {
               setPricesOpen(true);
             }}
           >
-            Check Prices
+            Prices
           </Button>
           <Button
             variant="contained"
             color="success"
             onClick={handleUpdateStore}
           >
-            Update Store
+            Update
           </Button>
         </DialogActions>
       </Dialog>

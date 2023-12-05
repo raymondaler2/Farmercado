@@ -195,11 +195,7 @@ const Information = () => {
               <img
                 src={default_avatar}
                 alt="Profile"
-                style={{
-                  width: "70%",
-                  borderRadius: "50%",
-                  marginTop: "10px",
-                }}
+                className="w-70 h-70 rounded-full mt-3"
               />
             </div>
           ) : (
@@ -207,7 +203,7 @@ const Information = () => {
               <img
                 src={`data:image/png;base64,${profilePicture}`}
                 alt="Profile"
-                style={{ width: "70%", borderRadius: "50%", marginTop: "10px" }}
+                className="w-70 h-70 rounded-full mt-3"
               />
             </div>
           )}
