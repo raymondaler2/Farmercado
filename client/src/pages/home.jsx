@@ -100,13 +100,15 @@ const Home = () => {
   };
 
   const getCurrentLocation = () => {
+    setUserLocation({
+      lat: 10.352136269202115,
+      lng: 123.91327011184387,
+    });
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        setUserLocation({
-          lat: 10.352136269202115,
-          lng: 123.91327011184387,
-        });
+        console.log("%c Line:110 🥒 longitude", "color:#fca650", longitude);
+        console.log("%c Line:110 🍔 latitude", "color:#e41a6a", latitude);
       },
       (error) => {
         console.error("Error getting current location:", error.message);
@@ -172,7 +174,9 @@ const Home = () => {
   };
 
   const handleChatClick = () => {
-    navigate("/Orders", { state: { productQuantities, storeUser, selectedMarker} });
+    navigate("/Orders", {
+      state: { productQuantities, storeUser, selectedMarker },
+    });
   };
 
   const getStoreUser = async (marker) => {
@@ -405,9 +409,13 @@ const Home = () => {
                     >
                       <DirectionsIcon />
                     </IconButton>
-                    <IconButton color="success" onClick={handleChatClick}>
-                      <ChatIcon />
-                    </IconButton>
+                    {!storeUser && storeUser?._id !== decryptedUserId ? (
+                      <IconButton color="success" onClick={handleChatClick}>
+                        <ChatIcon />
+                      </IconButton>
+                    ) : (
+                      <></>
+                    )}
                   </Stack>
                 </Grid>
               </ListItemText>

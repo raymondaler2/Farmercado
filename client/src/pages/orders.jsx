@@ -35,7 +35,7 @@ const Orders = () => {
   );
   const filters = {
     type: "messaging",
-    members: { $in: [user?._id] },
+    // members: { $in: [user?._id] },
   };
   const sort = {
     last_message_at: -1,
@@ -56,7 +56,7 @@ const Orders = () => {
     const { profile_picture, stores, ...rest } = user ?? "";
     await chatClient.connectUser({ ...rest, id: rest._id }, decryptedtoken);
     // if buyer ka
-    // if seller ka
+    // if seller ka `sellerUserId-BuyerId`
     const channel = chatClient.channel("messaging", `unique-storeName-Buyer`, {
       members: !!storeUser
         ? [decryptedUserId, storeUser?._id]
