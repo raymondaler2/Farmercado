@@ -5,15 +5,20 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
 import CryptoJS from "crypto-js";
+import axios from "axios";
 
 const NavBar = () => {
   const navigate = useNavigate();
+  const token = localStorage.getItem("token") ?? "";
   const isTokenAvailable = !!localStorage.getItem("token");
   const [isDropdownOpen, setDropdownOpen] = useState(false);
   const [isSnackbarOpen, setSnackbarOpen] = useState(false);
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
   const user_type = localStorage.getItem("decodedTokenUserType") ?? "";
   const decryptedUserType = CryptoJS.AES.decrypt(user_type, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
+  const decryptedtoken = CryptoJS.AES.decrypt(token, jwtSecret).toString(
     CryptoJS.enc.Utf8
   );
 
@@ -50,6 +55,39 @@ const NavBar = () => {
     setSnackbarOpen(false);
   };
 
+  const decodeToken = async (token) => {
+    try {
+      const response = await axios.post(
+        "http://localhost:5000/api/user/decode_token",
+        { token }
+      );
+
+      if (!!response.data) {
+        return true;
+      } else {
+        return false;
+      }
+    } catch (error) {
+      console.error("Decode Token Error:", error.message);
+      throw error;
+    }
+  };
+
+  useEffect(() => {
+    if (token) {
+      if (!decryptedtoken) {
+        navigate("/login");
+      }
+      decodeToken(decryptedtoken).then((tokenStatus) => {
+        if (tokenStatus === false) {
+          navigate("/login");
+        }
+      });
+    } else {
+      navigate("/login");
+    }
+  }, []);
+
   return (
     <nav className=" text-white p-4 fixed w-full top-0 z-10">
       <div className="container mx-auto flex items-center justify-between">
@@ -60,7 +98,7 @@ const NavBar = () => {
         </div>
 
         <div className="flex items-center space-x-4">
-          {isTokenAvailable ? (
+          {isTokenAvailable && decryptedtoken ? (
             decryptedUserType === "seller" ? (
               <>
                 <NavLink to="/" exact>

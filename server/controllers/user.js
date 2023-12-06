@@ -4,6 +4,13 @@ const Product = require("../models/product");
 const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const { StreamChat } = require("stream-chat");
+const Jimp = require("jimp");
+
+const streamChat = StreamChat.getInstance(
+  process.env.STREAM_API_KEY,
+  process.env.STREAM_SECRET
+);
 
 const generateToken = (user) => {
   return jwt.sign(
@@ -86,6 +93,14 @@ const user_login = asyncHandler(async (req, res) => {
 const add_user = asyncHandler(async (req, res) => {
   try {
     const user = await User.create(req.body);
+    const userId = user._id.toString();
+    const existingUser = await streamChat.queryUsers({ userId });
+
+    if (existingUser.users.length > 0) {
+      return res.status(400).json({ error: "User already exists" });
+    }
+    await streamChat.upsertUser({ ...user, id: userId, profile_picture: "" });
+
     res.status(200).json(user);
   } catch (error) {
     if (error instanceof Error && error.code === 11000) {
@@ -144,6 +159,46 @@ const update_user = asyncHandler(async (req, res) => {
         .json({ error: `Update User ERROR: User with ID ${id} not found` });
     }
 
+    const {
+      first_name,
+      last_name,
+      username,
+      email,
+      password: streamChatUpdatePassword,
+      user_type,
+      profile_picture: streamChatUpdateProfile,
+    } = user;
+
+    // const decodeBase64 = (base64String) => {
+    //   return Buffer.from(base64String, "base64");
+    // };
+
+    // const encodeBufferToBase64 = (buffer) => {
+    //   return buffer.toString("base64");
+    // };
+
+    // const decodedImage = decodeBase64(streamChatUpdateProfile);
+
+    try {
+      // const image = await Jimp.read(decodedImage);
+      // const resizedBuffer = await image
+      //   .resize(100, 100)
+      //   .getBufferAsync(Jimp.MIME_JPEG);
+      // const resizedImageBase64 = encodeBufferToBase64(resizedBuffer);
+
+      await streamChat.upsertUser({
+        id: id,
+        first_name,
+        last_name,
+        username,
+        email,
+        password: streamChatUpdatePassword,
+        user_type,
+      });
+    } catch (err) {
+      console.error("Error resizing image:", err);
+    }
+
     res.status(200).json(user);
   } catch (error) {
     res.status(500).json({ error: "Update User ERROR" });
@@ -160,6 +215,7 @@ const delete_user = asyncHandler(async (req, res) => {
         .status(404)
         .json({ error: `Delete User ERROR: User with ID ${id} not found` });
     }
+    await streamChat.deleteUser(id);
     res.status(200).json(`User: ${id} deleted`);
   } catch (error) {
     res.status(500).json({ error: "Delete User ERROR" });

@@ -23,6 +23,10 @@ const Login = () => {
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
+  const token = localStorage.getItem("token") ?? "";
+  const decryptedtoken = CryptoJS.AES.decrypt(token, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
 
   const handleTogglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
@@ -88,6 +92,12 @@ const Login = () => {
       setIsSnackbarOpen(true);
     }
   };
+
+  useEffect(() => {
+    if (!!decryptedtoken) {
+      navigate("/");
+    }
+  }, []);
 
   useEffect(() => {
     const rememberedUsername = localStorage.getItem("rememberedUsername");

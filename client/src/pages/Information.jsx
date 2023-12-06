@@ -33,14 +33,16 @@ const Information = () => {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [isUpdateSuccess, setIsUpdateSuccess] = useState(false);
   const [profilePicture, setProfilePicture] = useState(null);
+  const [profilePictureName, setProfilePictureName] = useState("");
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
   const user_id = localStorage.getItem("decodedTokenId") ?? "";
   const decryptedUserId = CryptoJS.AES.decrypt(user_id, jwtSecret).toString(
     CryptoJS.enc.Utf8
   );
 
-  const handleImageChange = (file) => {
-    setProfilePicture(file);
+  const handleImageChange = async (file) => {
+    setProfilePictureName(file);
+    setProfilePicture(await convertFileToBase64(file));
   };
 
   const openSnackbar = (message) => {
@@ -95,9 +97,7 @@ const Information = () => {
           email,
           password,
           user_type: role,
-          profile_picture: profilePicture
-            ? await convertFileToBase64(profilePicture)
-            : null,
+          profile_picture: profilePicture,
         }
       );
 
@@ -183,7 +183,7 @@ const Information = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <NavBar />
       <div className="bg-white pt-[10rem] mb-20">
-        <h1 className="text-2xl text-center text-[#8BC34A] text-[5rem] mb-11 font-serif">
+        <h1 className="text-2xl text-center text-[#8BC34A] text-[4rem] mb-11 font-serif">
           Information
         </h1>
         <div className="bg-white p-8 rounded w-96 shadow-2xl mt-4">
@@ -291,7 +291,7 @@ const Information = () => {
                 {profilePicture ? (
                   <p className="text-[#69717a]">
                     {truncateFilename(
-                      profilePicture.name ?? "No file selected.",
+                      profilePictureName.name ?? "No file selected.",
                       25
                     )}
                   </p>
@@ -303,6 +303,7 @@ const Information = () => {
             <FormControl fullWidth variant="outlined">
               <InputLabel id="role-label">Role</InputLabel>
               <Select
+                disabled
                 labelId="role-label"
                 id="role"
                 value={role}
