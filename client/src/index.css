@@ -32,3 +32,19 @@
 .upload-info a {
   text-decoration: underline;
 }
+
+.str-chat.messaging.str-chat-channel.str-chat__channel {
+  max-height: 91.4vh;
+}
+
+.str-chat.messaging.str-chat-channel-list.str-chat__channel-list.str-chat__channel-list-react.str-chat-channel-list--open {
+  margin-top: 8.4vh;
+}
+
+.str-chat.messaging.str-chat-channel-list.str-chat__channel-list.str-chat__channel-list-react {
+  margin-top: 8.4vh;
+}
+
+.str-chat__message-simple-status.str-chat__message-status {
+  position: unset !important;
+}

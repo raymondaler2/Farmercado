@@ -13,27 +13,27 @@ const streamChat = StreamChat.getInstance(
 );
 
 const generateToken = (user) => {
-  return jwt.sign(
-    {
-      id: user._id,
-      username: user.username,
-      email: user.email,
-      user_type: user.user_type,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: "168h",
-    }
-  );
+  const payload = {
+    user_id: user._id,
+    id: user._id,
+    username: user.username,
+    email: user.email,
+    user_type: user.user_type,
+  };
+
+  const token = jwt.sign(payload, process.env.STREAM_SECRET, {
+    expiresIn: "168h",
+  });
+
+  return token;
 };
 
 const verifyToken = (token) => {
+  const decoded = jwt.verify(token, process.env.STREAM_SECRET);
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     return decoded;
   } catch (error) {
-    console.error("Token Verification Error:", error.message);
-    throw new Error("Invalid token");
+    if (!decoded) console.error("Token Verification Error:", error.message);
   }
 };
 
@@ -414,6 +414,25 @@ const get_all_stores = asyncHandler(async (req, res) => {
   }
 });
 
+const get_user_by_storeid = asyncHandler(async (req, res) => {
+  try {
+    const { storeId } = req.params;
+
+    const user = await User.findOne({ "stores._id": storeId });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with store ID ${storeId} not found` });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Get User by Store ID ERROR:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = {
   get_all_stores,
   delete_store,
@@ -428,4 +447,5 @@ module.exports = {
   update_user,
   delete_user,
   decode_token,
+  get_user_by_storeid,
 };

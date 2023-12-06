@@ -8,6 +8,7 @@ import CryptoJS from "crypto-js";
 import axios from "axios";
 
 const NavBar = () => {
+  const location = useLocation();
   const navigate = useNavigate();
   const token = localStorage.getItem("token") ?? "";
   const isTokenAvailable = !!localStorage.getItem("token");
@@ -76,17 +77,24 @@ const NavBar = () => {
   useEffect(() => {
     if (token) {
       if (!decryptedtoken) {
-        navigate("/login");
-      }
-      decodeToken(decryptedtoken).then((tokenStatus) => {
-        if (tokenStatus === false) {
+        if (location.pathname !== "/register") {
           navigate("/login");
         }
-      });
+      } else {
+        decodeToken(decryptedtoken).then((tokenStatus) => {
+          if (tokenStatus === false) {
+            if (location.pathname !== "/register") {
+              navigate("/login");
+            }
+          }
+        });
+      }
     } else {
-      navigate("/login");
+      if (location.pathname !== "/register") {
+        navigate("/login");
+      }
     }
-  }, []);
+  }, [token, decryptedtoken, location.pathname, history]);
 
   return (
     <nav className=" text-white p-4 fixed w-full top-0 z-10">
@@ -222,7 +230,6 @@ const NavBar = () => {
 };
 
 const NavLink = ({ to, exact, children }) => {
-  const location = useLocation();
   const isActive = exact
     ? location.pathname === to
     : location.pathname.startsWith(to);
