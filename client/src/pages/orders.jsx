@@ -54,11 +54,6 @@ const Orders = () => {
   };
 
   const getUniqueID = () => {
-    console.log(
-      "%c Line:62 🍖 `${storeUser?._id}-${user._id}`",
-      "color:#3f7cff",
-      `${storeUser?._id}-${user._id}`
-    );
     if (decryptedUserType === "buyer") {
       if (!storeUser) {
         return `${user.chats[0]}-${user._id}`;

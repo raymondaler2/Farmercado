@@ -438,25 +438,16 @@ const get_user_by_storeid = asyncHandler(async (req, res) => {
 const buyer_chat = asyncHandler(async (req, res) => {
   try {
     const { buyerId, sellerId } = req.params;
-
     const buyer = await User.findById(buyerId);
     const seller = await User.findById(sellerId);
 
-    // Check if the sellerId is already in the chats array
     if (!buyer.chats.includes(sellerId)) {
-      // Add the sellerId to the chats array
       buyer.chats.push(sellerId);
-
-      // Save the updated seller document
       await buyer.save();
     }
 
-    // Check if the buyerId is already in the chats array
     if (!seller.chats.includes(buyerId)) {
-      // Add the buyerId to the chats array
       seller.chats.push(buyerId);
-
-      // Save the updated seller document
       await seller.save();
     }
 
