@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import NavBar from "./../components/NavBar.jsx";
 import CryptoJS from "crypto-js";
 import { useLocation } from "react-router-dom";
@@ -19,6 +19,7 @@ import default_avatar from "./../assets/default_avatar.jpg";
 import { EmojiPicker } from "stream-chat-react/emojis";
 
 const Orders = () => {
+  const chatInitCalled = useRef(false);
   const [user, setUser] = useState(null);
   const [client, setClient] = useState(null);
   const [channel, setChannel] = useState(null);
@@ -124,14 +125,16 @@ const Orders = () => {
   };
 
   useEffect(() => {
-    if (!!user && (!channel || !client)) {
+    if (!!user && (!channel || !client) && !chatInitCalled.current) {
+      chatInitCalled.current = true;
+
       chatInit();
 
       if (client) {
         return () => client.disconnectUser();
       }
     }
-  }, [user]);
+  }, [user, channel, client]);
 
   useEffect(() => {
     fetchUser();
