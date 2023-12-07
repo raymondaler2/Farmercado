@@ -39,29 +39,7 @@ const userSchema = mongoose.Schema({
     type: [Store.schema],
   },
   chats: {
-    type: [
-      {
-        user: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-        },
-        messages: [
-          {
-            sender: {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "User",
-            },
-            content: {
-              type: String,
-            },
-            timestamp: {
-              type: Date,
-              default: Date.now,
-            },
-          },
-        ],
-      },
-    ],
+    type: [String],
   },
 });
 

@@ -27,6 +27,7 @@ const Orders = () => {
   const token = localStorage.getItem("token") ?? "";
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
   const user_id = localStorage.getItem("decodedTokenId") ?? "";
+  const user_type = localStorage.getItem("decodedTokenUserType") ?? "";
   const decryptedtoken = CryptoJS.AES.decrypt(token, jwtSecret).toString(
     CryptoJS.enc.Utf8
   );
@@ -35,11 +36,14 @@ const Orders = () => {
   );
   const filters = {
     type: "messaging",
-    // members: { $in: [user?._id] },
+    members: { $in: [user?._id] },
   };
   const sort = {
     last_message_at: -1,
   };
+  const decryptedUserType = CryptoJS.AES.decrypt(user_type, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
 
   const fetchUser = async () => {
     const result = await axios.get(
@@ -55,8 +59,14 @@ const Orders = () => {
 
     const { profile_picture, stores, ...rest } = user ?? "";
     await chatClient.connectUser({ ...rest, id: rest._id }, decryptedtoken);
-    // if buyer ka
-    // if seller ka `sellerUserId-BuyerId`
+    console.log(
+      "%c Line:45 🥝 decryptedUserType",
+      "color:#b03734",
+      decryptedUserType
+    );
+    // `sellerUserId-BuyerId`
+    // if buyer ka get sellerUserId from chats array then user your own Id for BuyerId
+    // if seller ka user your own Id for sellerUserId then get BuyerId from chats array
     const channel = chatClient.channel("messaging", `unique-storeName-Buyer`, {
       members: !!storeUser
         ? [decryptedUserId, storeUser?._id]

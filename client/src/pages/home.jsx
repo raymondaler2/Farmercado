@@ -19,6 +19,8 @@ import {
   Stack,
   Typography,
   TextField,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import default_avatar from "./../assets/default_avatar.jpg";
@@ -29,6 +31,7 @@ import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const navigate = useNavigate();
+  const [isSnackbarOpen, setisSnackbarOpen] = useState(false);
   const [productQuantities, setProductQuantities] = useState({});
   const [zoomLevel, setZoomLevel] = useState(9);
   const [directionsText, setDirectionsText] = useState([]);
@@ -47,10 +50,14 @@ const Home = () => {
   const token = localStorage.getItem("token") ?? "";
   const jwtSecret = import.meta.env.VITE_JWT_SECRET;
   const user_id = localStorage.getItem("decodedTokenId") ?? "";
+  const user_type = localStorage.getItem("decodedTokenUserType") ?? "";
   const decryptedtoken = CryptoJS.AES.decrypt(token, jwtSecret).toString(
     CryptoJS.enc.Utf8
   );
   const decryptedUserId = CryptoJS.AES.decrypt(user_id, jwtSecret).toString(
+    CryptoJS.enc.Utf8
+  );
+  const decryptedUserType = CryptoJS.AES.decrypt(user_type, jwtSecret).toString(
     CryptoJS.enc.Utf8
   );
 
@@ -88,6 +95,10 @@ const Home = () => {
     getStoreUser(marker);
   };
 
+  const closeSnackbar = () => {
+    setisSnackbarOpen(false);
+  };
+
   const handleDrawerClose = () => {
     setOpenDrawer(false);
   };
@@ -107,8 +118,6 @@ const Home = () => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
-        console.log("%c Line:110 🥒 longitude", "color:#fca650", longitude);
-        console.log("%c Line:110 🍔 latitude", "color:#e41a6a", latitude);
       },
       (error) => {
         console.error("Error getting current location:", error.message);
@@ -174,9 +183,17 @@ const Home = () => {
   };
 
   const handleChatClick = () => {
-    navigate("/Orders", {
-      state: { productQuantities, storeUser, selectedMarker },
-    });
+    const isNotEmptyObject = (obj) => {
+      return Object.keys(obj).length > 0;
+    };
+    const isNotEmpty = isNotEmptyObject(productQuantities);
+    if (isNotEmpty) {
+      navigate("/Orders", {
+        state: { productQuantities, storeUser, selectedMarker },
+      });
+    }
+    setisSnackbarOpen(true);
+    return;
   };
 
   const getStoreUser = async (marker) => {
@@ -322,6 +339,24 @@ const Home = () => {
             />
           )}
         </GoogleMap>
+        <Snackbar
+          open={isSnackbarOpen}
+          autoHideDuration={1000}
+          onClose={closeSnackbar}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          sx={{
+            marginTop: "5rem",
+          }}
+        >
+          <Alert
+            elevation={6}
+            variant="filled"
+            onClose={closeSnackbar}
+            severity="error"
+          >
+            Invalid Order
+          </Alert>
+        </Snackbar>
         <Drawer anchor="bottom" open={openDrawer} onClose={handleDrawerClose}>
           <IconButton
             style={{ position: "absolute", top: 10, right: 10, zIndex: 1 }}
@@ -388,35 +423,36 @@ const Home = () => {
             <ListItem>
               <ListItemText>
                 <Grid container justifyContent="center" alignItems="center">
-                  <Stack
-                    direction="row"
-                    spacing={2}
-                    sx={{
-                      marginRight: "10px",
-                    }}
-                  >
-                    <IconButton
-                      color="success"
-                      onClick={() =>
-                        handleCall(selectedMarker?.store_contact_number)
-                      }
+                  {decryptedUserType === "seller" ? (
+                    <></>
+                  ) : (
+                    <Stack
+                      direction="row"
+                      spacing={2}
+                      sx={{
+                        marginRight: "10px",
+                      }}
                     >
-                      <PhoneIcon />
-                    </IconButton>
-                    <IconButton
-                      color="success"
-                      onClick={() => handleDirectionsClick(selectedMarker)}
-                    >
-                      <DirectionsIcon />
-                    </IconButton>
-                    {!storeUser && storeUser?._id !== decryptedUserId ? (
+                      <IconButton
+                        color="success"
+                        onClick={() =>
+                          handleCall(selectedMarker?.store_contact_number)
+                        }
+                      >
+                        <PhoneIcon />
+                      </IconButton>
+                      <IconButton
+                        color="success"
+                        onClick={() => handleDirectionsClick(selectedMarker)}
+                      >
+                        <DirectionsIcon />
+                      </IconButton>
+
                       <IconButton color="success" onClick={handleChatClick}>
                         <ChatIcon />
                       </IconButton>
-                    ) : (
-                      <></>
-                    )}
-                  </Stack>
+                    </Stack>
+                  )}
                 </Grid>
               </ListItemText>
             </ListItem>
@@ -470,27 +506,35 @@ const Home = () => {
                     </div>
                   </Grid>
                 </ListItem>
-                <ListItem>
-                  <ListItemText>
-                    <Grid container justifyContent="center" alignItems="center">
-                      <TextField
-                        fullWidth
-                        label="Quantity"
-                        variant="filled"
-                        value={productQuantities[product.product_name] || ""}
-                        onChange={(event) => {
-                          const isValidNumber = /^[0-9]*$/.test(
-                            event.target.value
-                          );
-                          if (!isValidNumber) {
-                            return;
-                          }
-                          handleTextFieldChange(product.product_name, event);
-                        }}
-                      />
-                    </Grid>
-                  </ListItemText>
-                </ListItem>
+                {decryptedUserType === "seller" ? (
+                  <></>
+                ) : (
+                  <ListItem>
+                    <ListItemText>
+                      <Grid
+                        container
+                        justifyContent="center"
+                        alignItems="center"
+                      >
+                        <TextField
+                          fullWidth
+                          label="Quantity"
+                          variant="filled"
+                          value={productQuantities[product.product_name] || ""}
+                          onChange={(event) => {
+                            const isValidNumber = /^[0-9]*$/.test(
+                              event.target.value
+                            );
+                            if (!isValidNumber) {
+                              return;
+                            }
+                            handleTextFieldChange(product.product_name, event);
+                          }}
+                        />
+                      </Grid>
+                    </ListItemText>
+                  </ListItem>
+                )}
               </div>
             ))}
           </List>
