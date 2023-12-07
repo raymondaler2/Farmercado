@@ -29,6 +29,9 @@ const userSchema = mongoose.Schema({
     type: String,
     required: [true, "Please enter User Type"],
   },
+  profile_picture_file: {
+    type: String,
+  },
   profile_picture: {
     type: String,
   },

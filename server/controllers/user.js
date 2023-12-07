@@ -5,7 +5,7 @@ const asyncHandler = require("express-async-handler");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { StreamChat } = require("stream-chat");
-const Jimp = require("jimp");
+const axios = require("axios");
 
 const streamChat = StreamChat.getInstance(
   process.env.STREAM_API_KEY,
@@ -99,7 +99,8 @@ const add_user = asyncHandler(async (req, res) => {
     if (existingUser.users.length > 0) {
       return res.status(400).json({ error: "User already exists" });
     }
-    await streamChat.upsertUser({ ...user, id: userId, profile_picture: "" });
+    const { username } = user;
+    await streamChat.upsertUser({ name: username, id: userId });
 
     res.status(200).json(user);
   } catch (error) {
@@ -137,13 +138,37 @@ const get_user_by_id = asyncHandler(async (req, res) => {
   }
 });
 
+const uploadToImgur = async (base64ImageData) => {
+  try {
+    const data = Buffer.from(base64ImageData, "base64");
+    const config = {
+      headers: {
+        Authorization: `Client-ID ${process.env.IMGUR_CLIENT}`,
+      },
+    };
+    const response = await axios.post(
+      "https://api.imgur.com/3/image",
+      data,
+      config
+    );
+
+    const imageUrl = response.data.data.link;
+    return imageUrl;
+  } catch (error) {
+    console.error("Error uploading image to Imgur:", error.message);
+    throw error;
+  }
+};
+
 const update_user = asyncHandler(async (req, res) => {
   try {
     const { id } = req.params;
     const { profile_picture, password, ...userData } = req.body;
 
     if (profile_picture) {
+      const url = await uploadToImgur(profile_picture);
       userData.profile_picture = profile_picture;
+      userData.profile_picture_file = url;
     }
 
     if (password) {
@@ -159,41 +184,11 @@ const update_user = asyncHandler(async (req, res) => {
         .json({ error: `Update User ERROR: User with ID ${id} not found` });
     }
 
-    const {
-      first_name,
-      last_name,
-      username,
-      email,
-      password: streamChatUpdatePassword,
-      user_type,
-      profile_picture: streamChatUpdateProfile,
-    } = user;
-
-    // const decodeBase64 = (base64String) => {
-    //   return Buffer.from(base64String, "base64");
-    // };
-
-    // const encodeBufferToBase64 = (buffer) => {
-    //   return buffer.toString("base64");
-    // };
-
-    // const decodedImage = decodeBase64(streamChatUpdateProfile);
-
+    const { username } = user;
     try {
-      // const image = await Jimp.read(decodedImage);
-      // const resizedBuffer = await image
-      //   .resize(100, 100)
-      //   .getBufferAsync(Jimp.MIME_JPEG);
-      // const resizedImageBase64 = encodeBufferToBase64(resizedBuffer);
-
       await streamChat.upsertUser({
         id: id,
-        first_name,
-        last_name,
-        username,
-        email,
-        password: streamChatUpdatePassword,
-        user_type,
+        name: username,
       });
     } catch (err) {
       console.error("Error resizing image:", err);
@@ -225,8 +220,11 @@ const delete_user = asyncHandler(async (req, res) => {
 const add_store_to_user = asyncHandler(async (req, res) => {
   try {
     const { userId, storeInfo, productsInfo } = req.body;
+    const store_url = !!storeInfo.store_image
+      ? await uploadToImgur(storeInfo.store_image)
+      : "";
+    storeInfo.store_image_url = store_url;
     const newStore = new Store(storeInfo);
-
     const products = productsInfo.map((product) => new Product(product));
     newStore.products = products;
 
@@ -292,7 +290,11 @@ const update_store_of_user = asyncHandler(async (req, res) => {
     if (store_contact_number) store.store_contact_number = store_contact_number;
     if (store_status) store.store_status = store_status;
     if (store_location) store.store_location = store_location;
-    if (store_image) store.store_image = store_image;
+    if (store_image) {
+      const store_url = !!store_image ? await uploadToImgur(store_image) : "";
+      store.store_image_url = store_url;
+      store.store_image = store_image;
+    }
 
     if (products && Array.isArray(products)) {
       products.forEach((productInfo) => {

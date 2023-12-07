@@ -8,6 +8,9 @@ const storeSchema = mongoose.Schema({
   store_image: {
     type: String,
   },
+  store_image_url: {
+    type: String,
+  },
   store_description: {
     type: String,
   },

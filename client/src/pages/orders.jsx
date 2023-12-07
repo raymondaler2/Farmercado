@@ -15,6 +15,8 @@ import {
 } from "stream-chat-react";
 import axios from "axios";
 import "stream-chat-react/dist/css/index.css";
+import default_avatar from "./../assets/default_avatar.jpg";
+import { EmojiPicker } from "stream-chat-react/emojis";
 
 const Orders = () => {
   const [user, setUser] = useState(null);
@@ -51,6 +53,11 @@ const Orders = () => {
   };
 
   const getUniqueID = () => {
+    console.log(
+      "%c Line:62 🍖 `${storeUser?._id}-${user._id}`",
+      "color:#3f7cff",
+      `${storeUser?._id}-${user._id}`
+    );
     if (decryptedUserType === "buyer") {
       if (!storeUser) {
         return `${user.chats[0]}-${user._id}`;
@@ -75,16 +82,30 @@ const Orders = () => {
   };
 
   const chatInit = async () => {
+    if (user.chats.length === 0) {
+      return;
+    }
     const chatClient = StreamChat.getInstance(
       import.meta.env.VITE_STREAM_API_KEY
     );
 
-    const { profile_picture, stores, ...rest } = user ?? "";
-    await chatClient.connectUser({ ...rest, id: rest._id }, decryptedtoken);
+    const { username } = user ?? "";
+    await chatClient.connectUser(
+      {
+        name: username,
+        id: user._id,
+        image: !!user?.profile_picture_file ? user?.profile_picture_file : null,
+      },
+      decryptedtoken
+    );
 
     const channelUniqueID = getUniqueID();
     const channelMembers = getMembers();
     const channel = chatClient.channel("messaging", channelUniqueID, {
+      name: selectedMarker?.store_name,
+      image: !selectedMarker?.store_image_url
+        ? default_avatar
+        : selectedMarker?.store_image_url,
       members: channelMembers,
     });
 
@@ -123,9 +144,9 @@ const Orders = () => {
         {!channel || !client ? (
           <LoadingIndicator />
         ) : (
-          <Chat client={client} theme="messaging">
+          <Chat client={client} theme="messaging light">
             <ChannelList filters={filters} sort={sort} />
-            <Channel channel={channel}>
+            <Channel channel={channel} EmojiPicker={EmojiPicker}>
               <Window>
                 <ChannelHeader />
                 <MessageList />

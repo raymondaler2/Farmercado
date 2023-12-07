@@ -182,7 +182,7 @@ const Home = () => {
     }));
   };
 
-  const handleChatClick = () => {
+  const handleChatClick = async () => {
     const isNotEmptyObject = (obj) => {
       return Object.keys(obj).length > 0;
     };
@@ -195,9 +195,15 @@ const Home = () => {
       isNotEmptyObject(productQuantities) && !hasEmptyStringValue;
 
     if (isNotEmpty) {
-      navigate("/Orders", {
-        state: { productQuantities, storeUser, selectedMarker },
-      });
+      await axios
+        .put(
+          `http://localhost:5000/api/user/buyer_chat/${decryptedUserId}/${storeUser?._id}`
+        )
+        .then(() => {
+          navigate("/Orders", {
+            state: { productQuantities, storeUser, selectedMarker},
+          });
+        });
     } else {
       setisSnackbarOpen(true);
     }
