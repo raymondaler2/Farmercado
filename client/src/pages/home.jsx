@@ -186,13 +186,21 @@ const Home = () => {
     const isNotEmptyObject = (obj) => {
       return Object.keys(obj).length > 0;
     };
-    const isNotEmpty = isNotEmptyObject(productQuantities);
+
+    const hasEmptyStringValue = Object.values(productQuantities).some(
+      (value) => value === ""
+    );
+
+    const isNotEmpty =
+      isNotEmptyObject(productQuantities) && !hasEmptyStringValue;
+
     if (isNotEmpty) {
       navigate("/Orders", {
         state: { productQuantities, storeUser, selectedMarker },
       });
+    } else {
+      setisSnackbarOpen(true);
     }
-    setisSnackbarOpen(true);
     return;
   };
 

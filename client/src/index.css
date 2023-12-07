@@ -48,3 +48,7 @@
 .str-chat__message-simple-status.str-chat__message-status {
   position: unset !important;
 }
+
+.str-chat__message-simple__actions__action.str-chat__message-simple__actions__action--thread.str-chat__message-reply-in-thread-button {
+  display: none;
+}

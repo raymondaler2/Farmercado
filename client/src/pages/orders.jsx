@@ -11,9 +11,7 @@ import {
   LoadingIndicator,
   MessageInput,
   MessageList,
-  Thread,
   Window,
-  useChatContext,
 } from "stream-chat-react";
 import axios from "axios";
 import "stream-chat-react/dist/css/index.css";
@@ -52,6 +50,30 @@ const Orders = () => {
     setUser(result.data);
   };
 
+  const getUniqueID = () => {
+    if (decryptedUserType === "buyer") {
+      if (!storeUser) {
+        return `${user.chats[0]}-${user._id}`;
+      } else {
+        return `${storeUser?._id}-${user._id}`;
+      }
+    } else {
+      return `${user._id}-${user.chats[0]}`;
+    }
+  };
+
+  const getMembers = () => {
+    if (decryptedUserType === "buyer") {
+      if (!storeUser) {
+        return [user._id];
+      } else {
+        return [user._id, storeUser?._id];
+      }
+    } else {
+      return [user._id];
+    }
+  };
+
   const chatInit = async () => {
     const chatClient = StreamChat.getInstance(
       import.meta.env.VITE_STREAM_API_KEY
@@ -59,18 +81,11 @@ const Orders = () => {
 
     const { profile_picture, stores, ...rest } = user ?? "";
     await chatClient.connectUser({ ...rest, id: rest._id }, decryptedtoken);
-    console.log(
-      "%c Line:45 🥝 decryptedUserType",
-      "color:#b03734",
-      decryptedUserType
-    );
-    // `sellerUserId-BuyerId`
-    // if buyer ka get sellerUserId from chats array then user your own Id for BuyerId
-    // if seller ka user your own Id for sellerUserId then get BuyerId from chats array
-    const channel = chatClient.channel("messaging", `unique-storeName-Buyer`, {
-      members: !!storeUser
-        ? [decryptedUserId, storeUser?._id]
-        : [decryptedUserId],
+
+    const channelUniqueID = getUniqueID();
+    const channelMembers = getMembers();
+    const channel = chatClient.channel("messaging", channelUniqueID, {
+      members: channelMembers,
     });
 
     await channel.watch();
@@ -116,7 +131,6 @@ const Orders = () => {
                 <MessageList />
                 <MessageInput />
               </Window>
-              <Thread />
             </Channel>
           </Chat>
         )}
