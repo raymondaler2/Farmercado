@@ -32,6 +32,9 @@ const userSchema = mongoose.Schema({
   profile_picture_file: {
     type: String,
   },
+  status: {
+    type: String,
+  },
   profile_picture: {
     type: String,
   },

@@ -88,7 +88,11 @@ const Login = () => {
       setIsSnackbarOpen(true);
     } catch (error) {
       setSnackbarSeverity("error");
-      setSnackbarMessage("Login failed. Invalid username or password");
+      setSnackbarMessage(
+        error.response.data.error === "Your account is not yet approved"
+          ? "Your account is not yet approved"
+          : "Login failed. Invalid username or password"
+      );
       setIsSnackbarOpen(true);
     }
   };

@@ -92,6 +92,12 @@ const user_login = asyncHandler(async (req, res) => {
       return res.status(401).json({ error: "Invalid username or password" });
     }
 
+    if (user.status === "pending") {
+      return res
+        .status(401)
+        .json({ error: "Your account is not yet approved" });
+    }
+
     const passwordMatch = await bcrypt.compare(password, user.password);
 
     if (!passwordMatch) {
@@ -115,13 +121,23 @@ const user_login = asyncHandler(async (req, res) => {
 
 const add_user = asyncHandler(async (req, res) => {
   try {
+    if (req.body.user_type === "buyer") {
+      req.body.status = "approved";
+    }
+
+    if (req.body.user_type === "seller") {
+      req.body.status = "pending";
+    }
+
     const user = await User.create(req.body);
+
     const userId = user._id.toString();
     const existingUser = await streamChat.queryUsers({ userId });
 
     if (existingUser.users.length > 0) {
       return res.status(400).json({ error: "User already exists" });
     }
+
     const { username } = user;
     await streamChat.upsertUser({ name: username, id: userId });
 
