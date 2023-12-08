@@ -6,12 +6,18 @@ import Paper from "@mui/material/Paper";
 import Avatar from "@mui/material/Avatar";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
+import IconButton from "@mui/material/IconButton";
+import Visibility from "@mui/icons-material/Visibility";
+import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { Link, useNavigate } from "react-router-dom";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import NavBar from "./../components/NavBar.jsx";
+import axios from "axios";
 
-const Lost = () => {
+const Change = () => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isSnackbarOpen, setIsSnackbarOpen] = useState(false);
   const [snackbarSeverity, setSnackbarSeverity] = useState("success");
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -21,45 +27,57 @@ const Lost = () => {
     setEmail(event.target.value);
   };
 
-  const handleSnackbarClose = () => {
-    setIsSnackbarOpen(false);
+  const handlePasswordChange = (event) => {
+    setPassword(event.target.value);
   };
 
-  const handleSubmit = (event) => {
-    event.preventDefault();
-    const isValidEmail = validateEmail(email);
+  const handleTogglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
 
-    if (isValidEmail) {
+  const handleSnackbarClose = () => {
+    setIsSnackbarOpen(false);
+    navigate("/login");
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    const isValidPassword = validatePassword(password);
+
+    if (isValidPassword) {
+      await axios.put(`http://localhost:5000/api/user/change_password`, {
+        email: email,
+        newPassword: password,
+      });
+      setEmail("");
+      setPassword("");
+
       setSnackbarSeverity("success");
-      setSnackbarMessage("Email sent successfully");
-      console.log("Email submitted:", email);
-      
+      setSnackbarMessage("Password Changed successfully");
     } else {
       setSnackbarSeverity("error");
-      setSnackbarMessage("Invalid email address");
+      setSnackbarMessage(
+        "Password should contain at least one uppercase letter, one lowercase letter, one special character, one number and should atleast be 5 characters long"
+      );
     }
 
     setIsSnackbarOpen(true);
   };
 
-  const validateEmail = (email) => {
-    const minLength = 5;
-    const maxLength = 255;
+  const validatePassword = (password) => {
+    const hasUpperCase = /[A-Z]/.test(password);
+    const hasLowerCase = /[a-z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    const hasMinLength = password.length >= 5;
+    const isStrongPassword =
+      hasMinLength &&
+      hasUpperCase &&
+      hasLowerCase &&
+      hasNumber &&
+      hasSpecialChar;
 
-    const isLengthValid =
-      email.length >= minLength && email.length <= maxLength;
-    const hasValidSpecialCharacters = /^[a-zA-Z0-9@._-]+$/.test(email);
-    const isValidDomain = /^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(
-      email.split("@")[1]
-    );
-    const hasSingleAtSymbol = email.split("@").length === 2;
-
-    return (
-      isLengthValid &&
-      hasValidSpecialCharacters &&
-      isValidDomain &&
-      hasSingleAtSymbol
-    );
+    return isStrongPassword;
   };
 
   return (
@@ -67,7 +85,7 @@ const Lost = () => {
       <NavBar />
       <div className="bg-white">
         <h1 className="text-center leading-[60px] text-[#8BC34A] text-[5rem] mb-11 font-serif">
-          Lost Password
+          Change Password
         </h1>
         <Container component="main">
           <Paper elevation={3} className="mt-8 p-4 flex flex-col items-center">
@@ -75,7 +93,7 @@ const Lost = () => {
               <LockOutlinedIcon />
             </Avatar>
             <h2 className="text-xl font-bold mb-4 mt-4 text-center text-[#444444;]">
-              Enter Your Email Addrress
+              Enter Your New Password
             </h2>
             <TextField
               variant="outlined"
@@ -83,13 +101,36 @@ const Lost = () => {
               required
               fullWidth
               id="email"
-              label="Email Address"
+              label="Email"
               name="email"
               autoComplete="email"
-              autoFocus
               value={email}
               onChange={handleEmailChange}
               className="mt-3"
+            />
+            <TextField
+              variant="outlined"
+              margin="normal"
+              required
+              fullWidth
+              id="new-password"
+              label="New Password"
+              name="new-password"
+              autoComplete="new-password"
+              type={showPassword ? "text" : "password"}
+              value={password}
+              onChange={handlePasswordChange}
+              className="mt-3"
+              InputProps={{
+                endAdornment: (
+                  <IconButton
+                    onClick={handleTogglePasswordVisibility}
+                    edge="end"
+                  >
+                    {showPassword ? <VisibilityOff /> : <Visibility />}
+                  </IconButton>
+                ),
+              }}
             />
             <Button
               fullWidth
@@ -143,4 +184,4 @@ const Lost = () => {
   );
 };
 
-export default Lost;
+export default Change;

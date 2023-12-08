@@ -6,11 +6,35 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const { StreamChat } = require("stream-chat");
 const axios = require("axios");
+const nodemailer = require("nodemailer");
 
 const streamChat = StreamChat.getInstance(
   process.env.STREAM_API_KEY,
   process.env.STREAM_SECRET
 );
+
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.EMAIL_USERNAME,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
+const sendEmail = async (to, subject, text) => {
+  try {
+    await transporter.sendMail({
+      from: `${process.env.EMAIL_USERNAME}`,
+      to,
+      subject,
+      text,
+    });
+    console.log("Email sent successfully");
+  } catch (error) {
+    console.error("Error sending email:", error.message);
+    throw error;
+  }
+};
 
 const generateToken = (user) => {
   const payload = {
@@ -458,7 +482,46 @@ const buyer_chat = asyncHandler(async (req, res) => {
   }
 });
 
+const forgot_password = asyncHandler(async (req, res) => {
+  const { email } = req.body;
+  const Subject = "Farmercado: Forgot your Password";
+  const Body = `Hi here is your password change link:\n\n http://localhost:5173/Change`;
+  await sendEmail(email, Subject, Body);
+});
+
+const change_password = asyncHandler(async (req, res) => {
+  const { email, newPassword } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ error: `User with email ${email} not found` });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedUser = await User.findByIdAndUpdate(
+      user._id,
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(500).json({ error: "Failed to update password" });
+    }
+
+    res.status(200).json({ message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change Password Error:", error.message);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
 module.exports = {
+  change_password,
+  forgot_password,
   buyer_chat,
   get_all_stores,
   delete_store,

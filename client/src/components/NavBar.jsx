@@ -79,7 +79,8 @@ const NavBar = () => {
       if (!decryptedtoken) {
         if (
           location.pathname !== "/register" &&
-          location.pathname !== "/Lost"
+          location.pathname !== "/Lost" &&
+          location.pathname !== "/Change"
         ) {
           navigate("/login");
         }
@@ -88,7 +89,8 @@ const NavBar = () => {
           if (tokenStatus === false) {
             if (
               location.pathname !== "/register" &&
-              location.pathname !== "/Lost"
+              location.pathname !== "/Lost" &&
+              location.pathname !== "/Change"
             ) {
               navigate("/login");
             }
@@ -96,7 +98,11 @@ const NavBar = () => {
         });
       }
     } else {
-      if (location.pathname !== "/register" && location.pathname !== "/Lost") {
+      if (
+        location.pathname !== "/register" &&
+        location.pathname !== "/Lost" &&
+        location.pathname !== "/Change"
+      ) {
         navigate("/login");
       }
     }
