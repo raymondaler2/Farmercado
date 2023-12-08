@@ -326,7 +326,7 @@ const Home = () => {
             marginLeft: "2rem", // Add left margin
             marginRight: "2rem", // Add right margin
             width: "calc(100% - 4rem)", // Adjust the width to accommodate margins
-            zIndex: 12,
+            zIndex: 5,
           }}
         />
         <GoogleMap
