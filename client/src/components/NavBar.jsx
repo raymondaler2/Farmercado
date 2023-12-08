@@ -77,20 +77,26 @@ const NavBar = () => {
   useEffect(() => {
     if (token) {
       if (!decryptedtoken) {
-        if (location.pathname !== "/register") {
+        if (
+          location.pathname !== "/register" &&
+          location.pathname !== "/Lost"
+        ) {
           navigate("/login");
         }
       } else {
         decodeToken(decryptedtoken).then((tokenStatus) => {
           if (tokenStatus === false) {
-            if (location.pathname !== "/register") {
+            if (
+              location.pathname !== "/register" &&
+              location.pathname !== "/Lost"
+            ) {
               navigate("/login");
             }
           }
         });
       }
     } else {
-      if (location.pathname !== "/register") {
+      if (location.pathname !== "/register" && location.pathname !== "/Lost") {
         navigate("/login");
       }
     }

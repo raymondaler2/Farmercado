@@ -134,7 +134,7 @@ const Login = () => {
         </h1>
         <div className="bg-white p-8 rounded w-96 shadow-2xl mt-4">
           <h2 className="text-xl font-bold mb-4 text-center text-[#444444;]">
-            Sign in to Your Account
+            Login in to Your Account
           </h2>
           <form onSubmit={handleLogin}>
             <div className="mb-4">
@@ -211,7 +211,7 @@ const Login = () => {
               Register
             </Link>{" "}
             |{" "}
-            <Link to="/lost-password" className="hover:underline">
+            <Link to="/Lost" className="hover:underline">
               Lost your password?
             </Link>
           </p>

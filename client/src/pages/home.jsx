@@ -323,9 +323,9 @@ const Home = () => {
           style={{
             position: "absolute",
             top: "13vh",
-            marginLeft: "2rem", // Add left margin
-            marginRight: "2rem", // Add right margin
-            width: "calc(100% - 4rem)", // Adjust the width to accommodate margins
+            marginLeft: "2rem",
+            marginRight: "2rem",
+            width: "calc(100% - 4rem)",
             zIndex: 5,
           }}
         />

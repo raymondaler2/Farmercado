@@ -6,8 +6,8 @@ import Register from "./pages/register.jsx";
 import Information from "./pages/Information.jsx";
 import Store from "./pages/store.jsx";
 import Orders from "./pages/orders.jsx";
+import Lost from "./pages/lostpassword.jsx";
 import { LoadScript } from "@react-google-maps/api";
-
 const MAP_LIBRARIES = ["places"];
 
 const App = () => {
@@ -27,6 +27,7 @@ const App = () => {
           <Route path="/Login" element={<Login />} />
           <Route path="/Information" element={<Information />} />
           <Route path="/Register" element={<Register />} />
+          <Route path="/Lost" element={<Lost />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </LoadScript>
