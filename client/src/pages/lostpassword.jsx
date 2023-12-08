@@ -35,7 +35,7 @@ const Lost = () => {
         email: email,
       });
       setSnackbarSeverity("success");
-      setSnackbarMessage("Email sent successfully");
+      setSnackbarMessage("Email sent successfully! Please check your email");
       setEmail("");
     } else {
       setSnackbarSeverity("error");
