@@ -32,8 +32,7 @@ const Lost = () => {
     if (isValidEmail) {
       setSnackbarSeverity("success");
       setSnackbarMessage("Email sent successfully");
-      console.log("Email submitted:", email);
-      
+      setEmail("");
     } else {
       setSnackbarSeverity("error");
       setSnackbarMessage("Invalid email address");
