@@ -16,10 +16,12 @@ const {
   get_all_stores,
   get_user_by_storeid,
   buyer_chat,
+  forgot_password,
   change_password,
 } = require("./../controllers/user");
 
 const router = express.Router();
+router.put("/forgot_password", forgot_password);
 router.put("/change_password", change_password);
 router.put("/buyer_chat/:buyerId/:sellerId", buyer_chat);
 router.get("/stores_user/:storeId", get_user_by_storeid);

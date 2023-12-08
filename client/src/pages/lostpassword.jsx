@@ -9,6 +9,7 @@ import MuiAlert from "@mui/material/Alert";
 import { Link, useNavigate } from "react-router-dom";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import NavBar from "./../components/NavBar.jsx";
+import axios from "axios";
 
 const Lost = () => {
   const [email, setEmail] = useState("");
@@ -25,11 +26,14 @@ const Lost = () => {
     setIsSnackbarOpen(false);
   };
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const isValidEmail = validateEmail(email);
 
     if (isValidEmail) {
+      await axios.put(`http://localhost:5000/api/user/forgot_password`, {
+        email: email,
+      });
       setSnackbarSeverity("success");
       setSnackbarMessage("Email sent successfully");
       setEmail("");
