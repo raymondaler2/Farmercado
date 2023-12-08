@@ -17,10 +17,7 @@ const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
     user: process.env.EMAIL_USERNAME,
-    pass: process.env.EMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false,
+    pass: process.env.EMAIL_APP_PASS,
   },
 });
 
@@ -32,7 +29,6 @@ const sendEmail = async (to, subject, text) => {
       subject,
       text,
     });
-    console.log("Email sent successfully");
   } catch (error) {
     console.error("Error sending email:", error.message);
     throw error;
@@ -490,6 +486,7 @@ const forgot_password = asyncHandler(async (req, res) => {
   const Subject = "Farmercado: Forgot your Password";
   const Body = `Hi here is your password change link:\n\n http://localhost:5173/Change`;
   await sendEmail(email, Subject, Body);
+  res.status(200).json("Email sent successfully");
 });
 
 const change_password = asyncHandler(async (req, res) => {
