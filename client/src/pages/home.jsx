@@ -28,9 +28,13 @@ import ChatIcon from "@mui/icons-material/Chat";
 import PhoneIcon from "@mui/icons-material/Phone";
 import DirectionsIcon from "@mui/icons-material/Directions";
 import { useNavigate } from "react-router-dom";
+import SearchBar from "material-ui-search-bar";
 
 const Home = () => {
   const navigate = useNavigate();
+  const prevSearchBarValueRef = useRef("");
+  const [markerColors, setMarkerColors] = useState({});
+  const [searchBarValue, setSearchBarValue] = useState("");
   const [isSnackbarOpen, setisSnackbarOpen] = useState(false);
   const [productQuantities, setProductQuantities] = useState({});
   const [zoomLevel, setZoomLevel] = useState(9);
@@ -43,6 +47,7 @@ const Home = () => {
   const MAP_MARKER =
     "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z";
   const [markers, setMarkers] = useState([]);
+  const [markersAll, setMarkersAll] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [storeUser, setStoreUser] = useState(null);
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -83,6 +88,7 @@ const Home = () => {
         (store) => store.store_status !== "Close"
       );
 
+      setMarkersAll(filteredMarkers);
       setMarkers(filteredMarkers);
     } catch (error) {
       console.error("Error fetching markers:", error);
@@ -201,7 +207,7 @@ const Home = () => {
         )
         .then(() => {
           navigate("/Orders", {
-            state: { productQuantities, storeUser, selectedMarker},
+            state: { productQuantities, storeUser, selectedMarker },
           });
         });
     } else {
@@ -215,6 +221,34 @@ const Home = () => {
       `http://localhost:5000/api/user/stores_user/${marker?._id}`
     );
     setStoreUser(response.data);
+  };
+
+  const handleSearch = () => {
+    const updatedMarkerColors = {};
+
+    markers.forEach((marker) => {
+      const storeNameMatch = marker.store_name
+        .toLowerCase()
+        .includes(searchBarValue.toLowerCase());
+
+      const productMatch = marker.products.some((product) =>
+        product.product_name
+          .toLowerCase()
+          .includes(searchBarValue.toLowerCase())
+      );
+
+      updatedMarkerColors[marker._id] =
+        storeNameMatch || productMatch
+          ? "rgba(139,195,74,255)"
+          : "rgb(4,156,228)";
+    });
+
+    setMarkerColors(updatedMarkerColors);
+  };
+
+  const onCancelSearch = () => {
+    setMarkers(markersAll);
+    setMarkerColors({});
   };
 
   useEffect(() => {
@@ -262,6 +296,10 @@ const Home = () => {
   }, [showDirections]);
 
   useEffect(() => {
+    prevSearchBarValueRef.current = searchBarValue;
+  }, [searchBarValue]);
+
+  useEffect(() => {
     getCurrentLocation();
     FetchMarkers();
   }, []);
@@ -270,6 +308,27 @@ const Home = () => {
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <NavBar />
       <div style={{ height: "90vh", width: "100%", marginTop: "95px" }}>
+        <SearchBar
+          value={searchBarValue}
+          cancelOnEscape={true}
+          onChange={(newValue) => {
+            if (!(prevSearchBarValueRef.current.length < newValue.length)) {
+              onCancelSearch();
+            }
+            setSearchBarValue(newValue);
+            prevSearchBarValueRef.current = newValue;
+          }}
+          onRequestSearch={handleSearch}
+          onCancelSearch={onCancelSearch}
+          style={{
+            position: "absolute",
+            top: "13vh",
+            marginLeft: "2rem", // Add left margin
+            marginRight: "2rem", // Add right margin
+            width: "calc(100% - 4rem)", // Adjust the width to accommodate margins
+            zIndex: 12,
+          }}
+        />
         <GoogleMap
           mapContainerStyle={{ height: "100%", width: "100%" }}
           zoom={zoomLevel}
@@ -304,15 +363,15 @@ const Home = () => {
           />
           {markers?.map((marker) => (
             <MarkerF
+              key={`${marker._id}-${markerColors[marker._id]}`}
               icon={{
                 path: MAP_MARKER,
                 scale: 2,
-                fillColor: "rgb(4,156,228)",
+                fillColor: markerColors[marker._id] || "rgb(4,156,228)",
                 fillOpacity: 1,
                 strokeColor: "hsla(52, 71%, 80%, 1)",
                 anchor: { x: 12, y: 24 },
               }}
-              key={marker._id}
               position={{
                 lat: marker.store_location.geometry.location.lat,
                 lng: marker.store_location.geometry.location.lng,
