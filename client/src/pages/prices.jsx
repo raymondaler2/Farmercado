@@ -5,7 +5,7 @@ import MenuItem from "@material-ui/core/MenuItem";
 import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from "@material-ui/core/FormControl";
-import { Grid, TextField } from "@mui/material";
+import { CircularProgress, Grid, TextField } from "@mui/material";
 
 const Prices = () => {
   const [chartData, setChartData] = useState([]);
@@ -115,7 +115,13 @@ const Prices = () => {
     setSelectedTimeInterval(selectedInterval);
   };
 
-  return (
+  return productData.length === 0 && forecastPrices.length === 0 ? (
+    <>
+      <center>
+        <CircularProgress />
+      </center>
+    </>
+  ) : (
     <>
       <div>
         <Grid
@@ -171,7 +177,11 @@ const Prices = () => {
           width={"100%"}
           height={"70vh"}
           chartType="LineChart"
-          loader={<div>Loading Chart</div>}
+          loader={
+            <center>
+              <CircularProgress />
+            </center>
+          }
           data={filteredChartData}
           options={{
             title: "Prices Over Time",
@@ -182,7 +192,18 @@ const Prices = () => {
             },
             hAxis: {
               title: "Date",
-              format: "MMM yyyy",
+              format: (() => {
+                switch (selectedTimeInterval) {
+                  case "Weekly":
+                    return "MMM dd, yyyy";
+                  case "Monthly":
+                    return "MMM yyyy";
+                  case "Yearly":
+                    return "yyyy";
+                  default:
+                    return "MMM dd, yyyy";
+                }
+              })(),
             },
             vAxis: {
               title: "Price",

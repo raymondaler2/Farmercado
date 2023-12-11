@@ -162,7 +162,7 @@ const NavBar = () => {
                 <NavLink to="/orders">Orders</NavLink>
 
                 <div className="relative group" onMouseEnter={handleMouseEnter}>
-                  <p className="block px-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
+                  <p className="block pl-1 pr-4 py-2 hover:text-green-500 cursor-pointer text-xl font-bold text-[#7A7A7A]">
                     Profile
                     <ExpandMoreIcon />{" "}
                   </p>

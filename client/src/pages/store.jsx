@@ -25,6 +25,7 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Tooltip,
 } from "@mui/material";
 import Snackbar from "@mui/material/Snackbar";
 import MuiAlert from "@mui/material/Alert";
@@ -776,43 +777,67 @@ const Store = () => {
                 </TableRow>
               </TableHead>
               <TableBody>
-                {stores.map((store) => (
-                  <TableRow key={store._id}>
-                    <TableCell>
-                      <FormControl>
-                        <Switch
-                          onClick={() => handleSwitch(store)}
-                          checked={store.store_status === "Open"}
-                        />
-                      </FormControl>
-                    </TableCell>
-                    <TableCell
-                      onClick={() => handleUpdateClick(store)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {store.store_name}
-                    </TableCell>
-                    <TableCell
-                      onClick={() => handleUpdateClick(store)}
-                      style={{ cursor: "pointer" }}
-                    >
-                      {`${store?.store_location?.formatted_address}`}
-                    </TableCell>
-                    <TableCell>
-                      {store.products.length > 0 && (
-                        <IconButton
-                          onClick={() => handleProductButtonClick(store)}
-                          className="mb-2 cursor-pointer"
+                {stores.map((store) => {
+                  const tooltipText =
+                    store.store_status === "Open"
+                      ? "Close Store"
+                      : "Open Store";
+                  return (
+                    <TableRow key={store._id}>
+                      <TableCell>
+                        <FormControl>
+                          <Tooltip
+                            title={tooltipText}
+                            enterTouchDelay={0}
+                            arrow
+                          >
+                            <Switch
+                              onClick={() => handleSwitch(store)}
+                              checked={store.store_status === "Open"}
+                            />
+                          </Tooltip>
+                        </FormControl>
+                      </TableCell>
+                      <TableCell
+                        onClick={() => handleUpdateClick(store)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {store.store_name}
+                      </TableCell>
+                      <TableCell
+                        onClick={() => handleUpdateClick(store)}
+                        style={{ cursor: "pointer" }}
+                      >
+                        {`${store?.store_location?.formatted_address}`}
+                      </TableCell>
+                      <TableCell>
+                        {store.products.length > 0 && (
+                          <Tooltip
+                            title={"Browse Produce"}
+                            enterTouchDelay={0}
+                            arrow
+                          >
+                            <IconButton
+                              onClick={() => handleProductButtonClick(store)}
+                              className="mb-2 cursor-pointer"
+                            >
+                              <InventoryIcon />
+                            </IconButton>
+                          </Tooltip>
+                        )}
+                        <Tooltip
+                          title={"Delete Store"}
+                          enterTouchDelay={0}
+                          arrow
                         >
-                          <InventoryIcon />
-                        </IconButton>
-                      )}
-                      <IconButton onClick={() => handleDeleteClick(store)}>
-                        <DeleteIcon />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                          <IconButton onClick={() => handleDeleteClick(store)}>
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           </TableContainer>
@@ -1037,6 +1062,7 @@ const Store = () => {
               </div>
             </Grid>
             <Grid item xs={12}>
+              <h1 className="text-center text-xl mb-5">Store Image</h1>
               <div className="upload-container-store mb-5">
                 <input
                   type="file"
@@ -1202,6 +1228,7 @@ const Store = () => {
                     </div>
                   </Grid>
                   <Grid item xs={12}>
+                    <h1 className="text-center text-xl mb-5">Product Image</h1>
                     <div className="upload-container-store mb-5">
                       <input
                         type="file"

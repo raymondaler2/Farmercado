@@ -117,7 +117,12 @@ const Register = () => {
 
       if (response.status === 200) {
         setSnackbarSeverity("success");
-        openSnackbar("Registration successful", "success");
+        openSnackbar(
+          role === "buyer"
+            ? "Registration successful. You can Now Login"
+            : "Registration successful. Please wait for the administration's approval of your account.",
+          "success"
+        );
       } else {
         setSnackbarSeverity("error");
         openSnackbar("Registration failed", "error");

@@ -9,6 +9,9 @@ import {
   MenuItem,
   IconButton,
   InputAdornment,
+  Checkbox,
+  FormControlLabel,
+  Grid,
 } from "@material-ui/core";
 import Snackbar from "@mui/material/Snackbar";
 import Alert from "@mui/material/Alert";
@@ -20,6 +23,7 @@ import default_avatar from "./../assets/default_avatar.jpg";
 import CryptoJS from "crypto-js";
 
 const Information = () => {
+  const [updatePassword, setUpdatePassword] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [username, setUsername] = useState("");
@@ -55,7 +59,7 @@ const Information = () => {
   };
 
   const checkFormValidity = () => {
-    const fields = [firstName, lastName, email, password];
+    const fields = [firstName, lastName, email];
 
     const isAllFieldsFilled = fields.every((field) => field.trim() !== "");
     const hasUpperCase = /[A-Z]/.test(password);
@@ -70,7 +74,11 @@ const Information = () => {
       hasNumber &&
       hasSpecialChar;
 
-    setIsFormValid(isAllFieldsFilled && isStrongPassword);
+    if (updatePassword === true) {
+      setIsFormValid(isAllFieldsFilled && isStrongPassword);
+    } else {
+      setIsFormValid(isAllFieldsFilled);
+    }
   };
 
   const handleInputChange = (valueSetter, value) => {
@@ -87,18 +95,23 @@ const Information = () => {
       return;
     }
 
+    const updateData = {
+      first_name: firstName,
+      last_name: lastName,
+      username,
+      email,
+      user_type: role,
+      profile_picture: profilePicture,
+    };
+
+    if (updatePassword) {
+      updateData.password = password;
+    }
+
     try {
       const response = await axios.put(
         `http://localhost:5000/api/user/${decryptedUserId}`,
-        {
-          first_name: firstName,
-          last_name: lastName,
-          username,
-          email,
-          password,
-          user_type: role,
-          profile_picture: profilePicture,
-        }
+        updateData
       );
 
       if (response.status === 200) {
@@ -179,6 +192,10 @@ const Information = () => {
     }
   }, [isUpdateSuccess]);
 
+  useEffect(() => {
+    checkFormValidity();
+  }, [updatePassword, firstName, lastName, email, password]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <NavBar />
@@ -233,39 +250,47 @@ const Information = () => {
               variant="outlined"
             />
             <TextField
-              label="Update Email Address"
+              label="Email Address"
               fullWidth
               margin="normal"
               value={email}
               onChange={(e) => handleInputChange(setEmail, e.target.value)}
               variant="outlined"
             />
-            <TextField
-              label="Password"
-              type={showPassword ? "text" : "password"}
-              fullWidth
-              margin="normal"
-              variant="outlined"
-              value={password}
-              onChange={(e) => handleInputChange(setPassword, e.target.value)}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      aria-label="toggle password visibility"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <VisibilityIcon />
-                      ) : (
-                        <VisibilityOffIcon />
-                      )}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            <PasswordStrengthIndicator password={password} />
+            {updatePassword === false ? (
+              <></>
+            ) : (
+              <>
+                <TextField
+                  label="Password"
+                  type={showPassword ? "text" : "password"}
+                  fullWidth
+                  margin="normal"
+                  variant="outlined"
+                  value={password}
+                  onChange={(e) =>
+                    handleInputChange(setPassword, e.target.value)
+                  }
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <VisibilityIcon />
+                          ) : (
+                            <VisibilityOffIcon />
+                          )}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
+                />
+                <PasswordStrengthIndicator password={password} />
+              </>
+            )}
             <div className="upload-container mb-5">
               <input
                 type="file"
@@ -318,12 +343,34 @@ const Information = () => {
                 <MenuItem value="seller">Seller</MenuItem>
               </Select>
             </FormControl>
+            <Grid container alignItems="center" justify="center">
+              <Grid item>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={updatePassword}
+                      onChange={(e) => {
+                        setUpdatePassword(e.target.checked);
+                        if (e.target.checked === false) {
+                          setPassword("");
+                        }
+                        if (!password) {
+                          setIsFormValid(false);
+                        }
+                      }}
+                      color="success"
+                    />
+                  }
+                  label="Update Password"
+                />
+              </Grid>
+            </Grid>
             <Button
               variant="contained"
               color="primary"
               fullWidth
               onClick={handleUpdate}
-              disabled={!isFormValid}
+              disabled={isFormValid}
               style={
                 !isFormValid
                   ? {
@@ -334,6 +381,7 @@ const Information = () => {
                       padding: "20px 10px 20px 10px",
                       fontSize: "16px",
                       fontWeight: "Bold",
+                      marginTop: "10px",
                     }
                   : {
                       color: "white",
@@ -342,6 +390,7 @@ const Information = () => {
                       padding: "20px 10px 20px 10px",
                       fontSize: "16px",
                       fontWeight: "Bold",
+                      marginTop: "10px",
                     }
               }
             >

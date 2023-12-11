@@ -200,7 +200,21 @@ const Home = () => {
     const isNotEmpty =
       isNotEmptyObject(productQuantities) && !hasEmptyStringValue;
 
-    if (isNotEmpty) {
+    const isInvalidOrder = Object.keys(productQuantities).some(
+      (product_name) => {
+        const quantity = parseInt(productQuantities[product_name], 10);
+        const count = parseInt(
+          selectedMarker?.products.find(
+            (product) => product.product_name === product_name
+          )?.product_count,
+          10
+        );
+
+        return quantity > count;
+      }
+    );
+
+    if (isNotEmpty && !isInvalidOrder) {
       await axios
         .put(
           `http://localhost:5000/api/user/buyer_chat/${decryptedUserId}/${storeUser?._id}`
@@ -590,6 +604,7 @@ const Home = () => {
                         alignItems="center"
                       >
                         <TextField
+                          required
                           fullWidth
                           label="Quantity"
                           variant="filled"
