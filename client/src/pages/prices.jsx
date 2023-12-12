@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useContext } from "react";
 import { Chart } from "react-google-charts";
 import axios from "axios";
 import MenuItem from "@material-ui/core/MenuItem";
@@ -6,8 +6,16 @@ import Select from "@material-ui/core/Select";
 import InputLabel from "@material-ui/core/InputLabel";
 import FormControl from "@material-ui/core/FormControl";
 import { CircularProgress, Grid, TextField } from "@mui/material";
+import {
+  WeeklyDataContext,
+  MonthlyDataContext,
+  YearlyDataContext,
+} from "./../App.jsx";
 
 const Prices = () => {
+  const weeklyData = useContext(WeeklyDataContext);
+  const monthlyData = useContext(MonthlyDataContext);
+  const yearlyData = useContext(YearlyDataContext);
   const [chartData, setChartData] = useState([]);
   const [productData, setProductData] = useState([]);
   const [forecastPrices, setForecastPrices] = useState([]);
@@ -18,12 +26,10 @@ const Prices = () => {
 
   const fetchData = async () => {
     try {
-      const [historicalResult, forecastResult] = await Promise.all([
-        axios.get(`http://localhost:5000/api/historical/`),
-        axios.get(`http://localhost:5000/api/historical/forecast_prices`),
-      ]);
+      const forecastResult = await axios.get(
+        `http://localhost:5000/api/historical/forecast_prices`
+      );
 
-      setProductData(historicalResult.data);
       setForecastPrices(forecastResult.data);
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -77,6 +83,20 @@ const Prices = () => {
 
     setChartData(formattedChartData);
   }, [productData, forecastPrices]);
+
+  useEffect(() => {
+    switch (selectedTimeInterval) {
+      case "Weekly":
+        setProductData(weeklyData);
+        break;
+      case "Monthly":
+        setProductData(monthlyData);
+        break;
+      case "Yearly":
+        setProductData(yearlyData);
+        break;
+    }
+  }, [selectedTimeInterval, weeklyData, monthlyData, yearlyData]);
 
   const handleProductChange = (event) => {
     const selectedProduct = event.target.value;
@@ -139,13 +159,15 @@ const Prices = () => {
                 id="time-interval-select"
                 value={selectedTimeInterval}
                 onChange={handleTimeIntervalChange}
-                className="mr-2"
+                className="mr-2 mb-2"
               >
                 <MenuItem value="Weekly">Weekly</MenuItem>
                 <MenuItem value="Monthly">Monthly</MenuItem>
                 <MenuItem value="Yearly">Yearly</MenuItem>
               </Select>
             </FormControl>
+          </Grid>
+          <Grid item xs={6}>
             <FormControl>
               <InputLabel id="product-select-label">Product</InputLabel>
               <Select
