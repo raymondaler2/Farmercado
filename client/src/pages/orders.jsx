@@ -17,6 +17,7 @@ import axios from "axios";
 import "stream-chat-react/dist/css/index.css";
 import default_avatar from "./../assets/default_avatar.jpg";
 import { EmojiPicker } from "stream-chat-react/emojis";
+import { ButtonBase, Stack } from "@mui/material";
 
 const Orders = () => {
   const chatInitCalled = useRef(false);
@@ -135,6 +136,29 @@ const Orders = () => {
     fetchUser();
   }, []);
 
+  const handleChannelClick = (channelData) => {
+    setChannel(channelData);
+  };
+
+  const renderChannels = (loadedChannels, ChannelPreview) => {
+    return (
+      <Stack>
+        {loadedChannels.map((channelData) => (
+          <ButtonBase
+            key={channelData.id}
+            onClick={() => handleChannelClick(channelData)}
+            sx={{
+              width: "15rem",
+              marginLeft: "10px",
+            }}
+          >
+            <div>{ChannelPreview(channelData)}</div>
+          </ButtonBase>
+        ))}
+      </Stack>
+    );
+  };
+
   return (
     <>
       <NavBar />
@@ -143,7 +167,11 @@ const Orders = () => {
           <LoadingIndicator />
         ) : (
           <Chat client={client} theme="messaging light">
-            <ChannelList filters={filters} sort={sort} />
+            <ChannelList
+              filters={filters}
+              sort={sort}
+              renderChannels={renderChannels}
+            />
             <Channel channel={channel} EmojiPicker={EmojiPicker}>
               <Window>
                 <ChannelHeader />
