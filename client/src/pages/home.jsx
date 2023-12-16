@@ -21,6 +21,14 @@ import {
   TextField,
   Snackbar,
   Alert,
+  Button,
+  Avatar,
+  Badge,
+  Select,
+  MenuItem,
+  InputLabel,
+  FormControl,
+  Divider,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import default_avatar from "./../assets/default_avatar.jpg";
@@ -29,10 +37,13 @@ import PhoneIcon from "@mui/icons-material/Phone";
 import DirectionsIcon from "@mui/icons-material/Directions";
 import { useNavigate } from "react-router-dom";
 import SearchBar from "material-ui-search-bar";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 
 const Home = () => {
   const navigate = useNavigate();
   const prevSearchBarValueRef = useRef("");
+  const [sortOption, setSortOption] = useState("alphabetical");
+  const [openMarkerDrawer, setOpenMarkerDrawer] = useState(false);
   const [markerColors, setMarkerColors] = useState({});
   const [searchBarValue, setSearchBarValue] = useState("");
   const [isSnackbarOpen, setisSnackbarOpen] = useState(false);
@@ -48,6 +59,7 @@ const Home = () => {
     "M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z";
   const [markers, setMarkers] = useState([]);
   const [markersAll, setMarkersAll] = useState([]);
+  const [filteredMarkers, setFilteredMarkers] = useState([]);
   const [selectedMarker, setSelectedMarker] = useState(null);
   const [storeUser, setStoreUser] = useState(null);
   const [openDrawer, setOpenDrawer] = useState(false);
@@ -84,15 +96,37 @@ const Home = () => {
   const FetchMarkers = async () => {
     try {
       const result = await axios.get(`http://localhost:5000/api/user/stores`);
-      const filteredMarkers = result.data.filter(
+      const openMarkers = result.data.filter(
         (store) => store.store_status !== "Close"
       );
 
-      setMarkersAll(filteredMarkers);
-      setMarkers(filteredMarkers);
+      const sortedArray = openMarkers.sort((a, b) => {
+        const storeNameA = a.store_name.toUpperCase();
+        const storeNameB = b.store_name.toUpperCase();
+
+        if (storeNameA < storeNameB) {
+          return -1;
+        }
+        if (storeNameA > storeNameB) {
+          return 1;
+        }
+        return 0;
+      });
+
+      setMarkersAll(sortedArray);
+      setMarkers(sortedArray);
+      setFilteredMarkers(sortedArray);
     } catch (error) {
       console.error("Error fetching markers:", error);
     }
+  };
+
+  const handleMarkerDrawerOpen = () => {
+    setOpenMarkerDrawer(true);
+  };
+
+  const handleMarkerDrawerClose = () => {
+    setOpenMarkerDrawer(false);
   };
 
   const handleMarkerClick = (marker) => {
@@ -240,6 +274,25 @@ const Home = () => {
   const handleSearch = () => {
     const updatedMarkerColors = {};
 
+    const filtered = markersAll.filter((marker) => {
+      const storeNameMatch = marker.store_name
+        .toLowerCase()
+        .includes(searchBarValue.toLowerCase());
+
+      const productMatch = marker.products.some((product) =>
+        product.product_name
+          .toLowerCase()
+          .includes(searchBarValue.toLowerCase())
+      );
+
+      updatedMarkerColors[marker._id] =
+        storeNameMatch || productMatch
+          ? "rgba(139,195,74,255)"
+          : "rgb(4,156,228)";
+
+      return storeNameMatch || productMatch;
+    });
+
     markers.forEach((marker) => {
       const storeNameMatch = marker.store_name
         .toLowerCase()
@@ -258,11 +311,15 @@ const Home = () => {
     });
 
     setMarkerColors(updatedMarkerColors);
+    setFilteredMarkers(filtered);
   };
 
   const onCancelSearch = () => {
+    setSearchBarValue("");
     setMarkers(markersAll);
+    setFilteredMarkers([]);
     setMarkerColors({});
+    setFilteredMarkers(markersAll);
   };
 
   useEffect(() => {
@@ -318,6 +375,31 @@ const Home = () => {
     FetchMarkers();
   }, []);
 
+  useEffect(() => {
+    if (sortOption === "alphabetical") {
+      const sortedArray = [...filteredMarkers].sort((a, b) => {
+        const storeNameA = a.store_name.toUpperCase();
+        const storeNameB = b.store_name.toUpperCase();
+        if (storeNameA < storeNameB) {
+          return -1;
+        }
+        if (storeNameA > storeNameB) {
+          return 1;
+        }
+        return 0;
+      });
+      setFilteredMarkers(sortedArray);
+    }
+    if (sortOption === "produceCount") {
+      const sortedArray = [...filteredMarkers].sort((a, b) => {
+        const productCountA = a.products[0].product_count;
+        const productCountB = b.products[0].product_count;
+        return productCountB - productCountA;
+      });
+      setFilteredMarkers(sortedArray);
+    }
+  }, [sortOption]);
+
   return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-white">
       <NavBar />
@@ -343,6 +425,112 @@ const Home = () => {
             zIndex: 5,
           }}
         />
+        <IconButton
+          style={{
+            position: "absolute",
+            bottom: "2vh",
+            left: "1rem",
+            zIndex: 5,
+            backgroundColor: "white",
+            borderRadius: "50%",
+          }}
+          variant="filled"
+          onClick={handleMarkerDrawerOpen}
+        >
+          <Badge color="primary" badgeContent={filteredMarkers.length}>
+            <FormatListBulletedIcon />
+          </Badge>
+        </IconButton>
+        <Drawer
+          anchor="left"
+          open={openMarkerDrawer}
+          onClose={handleMarkerDrawerClose}
+        >
+          <List>
+            <ListItem>
+              <ListItemText>
+                <Grid
+                  container
+                  justifyContent="center"
+                  alignItems="center"
+                  sx={{
+                    marginTop: "10px",
+                  }}
+                >
+                  <FormControl fullWidth variant="filled">
+                    <InputLabel>Sort By</InputLabel>
+                    <Select
+                      value={sortOption}
+                      onChange={(event) => setSortOption(event.target.value)}
+                    >
+                      <MenuItem value="alphabetical">Alphabetical</MenuItem>
+                      <MenuItem value="produceCount">Produce Count</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+              </ListItemText>
+            </ListItem>
+            {filteredMarkers.length > 0 ? (
+              filteredMarkers.map((marker) => (
+                <>
+                  <ListItem
+                    key={marker._id}
+                    onClick={() => handleMarkerClick(marker)}
+                  >
+                    <ListItemText>
+                      <Button
+                        variant="filled"
+                        color="success"
+                        sx={{ textTransform: "none" }}
+                      >
+                        <div>
+                          <Grid container spacing={2}>
+                            <Grid item>
+                              <Avatar src={marker.store_image_url} />
+                            </Grid>
+                            <Grid item>
+                              <div className="mt-2">{`${marker.store_name}`}</div>
+                            </Grid>
+                            <Grid item></Grid>
+                            <Grid item>
+                              <div className="spacer mb-1"></div>
+                            </Grid>
+                          </Grid>
+                          {searchBarValue !== "" &&
+                            marker.products.some((product) =>
+                              product.product_name
+                                .toLowerCase()
+                                .includes(searchBarValue.toLowerCase())
+                            ) && (
+                              <Stack>
+                                {marker.products
+                                  .filter((product) =>
+                                    product.product_name
+                                      .toLowerCase()
+                                      .includes(searchBarValue.toLowerCase())
+                                  )
+                                  .map((product) => (
+                                    <p
+                                      key={product._id}
+                                    >{`${product.product_name} - ${product.product_count}`}</p>
+                                  ))}
+                              </Stack>
+                            )}
+                        </div>
+                      </Button>
+                    </ListItemText>
+                  </ListItem>
+                  <Divider variant="middle" />
+                </>
+              ))
+            ) : (
+              <ListItem>
+                <ListItemText>No Results</ListItemText>
+              </ListItem>
+            )}
+          </List>
+        </Drawer>
+
         <GoogleMap
           mapContainerStyle={{ height: "100%", width: "100%" }}
           zoom={zoomLevel}
@@ -588,7 +776,7 @@ const Home = () => {
                     />
                     <div className="flex flex-col ml-5">
                       <p className="text-xl">{product.product_name}</p>
-                      <p className="text-lg">{`Count: ${product.product_count}`}</p>
+                      <p className="text-lg">{`Count: ${product.product_count} KG`}</p>
                       <p className="text-lg">{`Price: ₱ ${product.product_price}`}</p>
                     </div>
                   </Grid>
