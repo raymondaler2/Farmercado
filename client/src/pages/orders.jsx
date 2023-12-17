@@ -18,10 +18,15 @@ import "stream-chat-react/dist/css/index.css";
 import default_avatar from "./../assets/default_avatar.jpg";
 import { EmojiPicker } from "stream-chat-react/emojis";
 import { ButtonBase, Stack } from "@mui/material";
+import Snackbar from "@mui/material/Snackbar";
+import MuiAlert from "@mui/material/Alert";
 
 const Orders = () => {
   const chatInitCalled = useRef(false);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarDeleted, setSnackbarDeleted] = useState(false);
   const [user, setUser] = useState(null);
+  const [seller, setSeller] = useState(null);
   const [client, setClient] = useState(null);
   const [channel, setChannel] = useState(null);
   const location = useLocation();
@@ -110,7 +115,7 @@ const Orders = () => {
 
     if (!!productQuantities) {
       const formattedproductQuantities = Object.entries(productQuantities)
-        .map(([key, value]) => `${key} - ${value}`)
+        .map(([key, value]) => `${key} - ${value} KG`)
         .join("\n");
       channel.sendMessage({
         text: `Hi I want to purchase:\n${formattedproductQuantities}`,
@@ -131,6 +136,54 @@ const Orders = () => {
       }
     }
   }, [user, channel, client]);
+
+  const fetchSeller = async (id) => {
+    const result = await axios.get(`http://localhost:5000/api/user/${id}`);
+    setSeller(result.data);
+  };
+
+  const handleCloseSnackbar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarOpen(false);
+  };
+
+  const handleCloseSnackbarDeleted = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+    setSnackbarDeleted(false);
+  };
+
+  useEffect(() => {
+    if (seller) {
+      const isStoreNameMatch = seller.stores.some((store) => {
+        return store.store_name === channel.data.name;
+      });
+
+      if (!isStoreNameMatch) {
+        console.log(`No match found for store_name: ${channel.data.name}`);
+        setSnackbarDeleted(true);
+      }
+
+      seller.stores.forEach((store) => {
+        if (store.store_name === channel.data.name) {
+          if (store.store_status !== "Open") {
+            setSnackbarOpen(true);
+          }
+        }
+      });
+    }
+  }, [seller, channel]);
+
+  useEffect(() => {
+    if (channel) {
+      const parts = channel.data.id.split("-");
+      const sellerId = parts[0];
+      fetchSeller(sellerId);
+    }
+  }, [channel]);
 
   useEffect(() => {
     fetchUser();
@@ -176,12 +229,46 @@ const Orders = () => {
               <Window>
                 <ChannelHeader />
                 <MessageList />
-                <MessageInput />
+                {!snackbarDeleted && <MessageInput />}
               </Window>
             </Channel>
           </Chat>
         )}
       </div>
+      <Snackbar
+        open={snackbarOpen}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          marginTop: "10rem",
+        }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={handleCloseSnackbar}
+          severity="warning"
+        >
+          Store is Closed
+        </MuiAlert>
+      </Snackbar>
+      <Snackbar
+        open={snackbarDeleted}
+        onClose={handleCloseSnackbarDeleted}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        sx={{
+          marginTop: "10rem",
+        }}
+      >
+        <MuiAlert
+          elevation={6}
+          variant="filled"
+          onClose={handleCloseSnackbarDeleted}
+          severity="error"
+        >
+          Store is Deleted
+        </MuiAlert>
+      </Snackbar>
     </>
   );
 };

@@ -428,7 +428,7 @@ const Home = () => {
         <IconButton
           style={{
             position: "absolute",
-            bottom: "2vh",
+            bottom: "3vh",
             left: "1rem",
             zIndex: 5,
             backgroundColor: "white",
