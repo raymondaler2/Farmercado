@@ -29,6 +29,8 @@ import {
   InputLabel,
   FormControl,
   Divider,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import default_avatar from "./../assets/default_avatar.jpg";
@@ -449,24 +451,24 @@ const Home = () => {
           <List>
             <ListItem>
               <ListItemText>
-                <Grid
-                  container
-                  justifyContent="center"
-                  alignItems="center"
-                  sx={{
-                    marginTop: "10px",
-                  }}
-                >
-                  <FormControl fullWidth variant="filled">
-                    <InputLabel>Sort By</InputLabel>
-                    <Select
-                      value={sortOption}
-                      onChange={(event) => setSortOption(event.target.value)}
-                    >
-                      <MenuItem value="alphabetical">Alphabetical</MenuItem>
-                      <MenuItem value="produceCount">Produce Count</MenuItem>
-                    </Select>
-                  </FormControl>
+                <Grid container justifyContent="center" alignItems="center">
+                  <ToggleButtonGroup
+                    value={sortOption}
+                    exclusive
+                    onChange={(event, newSortOption) =>
+                      setSortOption(newSortOption)
+                    }
+                    aria-label="Sort By"
+                    variant="outlined"
+                    color="primary"
+                  >
+                    <ToggleButton value="alphabetical">
+                      <div className="p-2">Alphabetical</div>
+                    </ToggleButton>
+                    <ToggleButton value="produceCount">
+                      <div className="p-2">Produce Count</div>
+                    </ToggleButton>
+                  </ToggleButtonGroup>
                 </Grid>
               </ListItemText>
             </ListItem>
